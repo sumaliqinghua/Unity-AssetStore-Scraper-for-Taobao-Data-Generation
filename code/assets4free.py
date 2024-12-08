@@ -78,7 +78,7 @@ class WebsiteScraper:
     def create_article_directory(self, title):
         """为每篇文章创建独立的目录"""
         # 使用标题的MD5作为目录名，避免文件名问题
-        dir_name = md5(title.encode('utf-8')).hexdigest()[:8]
+        dir_name = title.replace(' ', '_').replace(':', '_')
         full_path = os.path.join(self.base_download_dir, dir_name)
         os.makedirs(full_path, exist_ok=True)
         return full_path
