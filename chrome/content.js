@@ -1,28 +1,106 @@
 // 获取元素的选择器
 function getSelector(element) {
-    if (element.id) {
-        return '#' + element.id;
-    }
-    
-    if (element.className) {
-        const classes = Array.from(element.classList).join('.');
-        return '.' + classes;
+    // 获取所有可能的属性
+    function getAllAttributes(el) {
+        const attrs = el.attributes;
+        let result = [];
+        for (let i = 0; i < attrs.length; i++) {
+            const attr = attrs[i];
+            // 忽略一些动态或不稳定的属性
+            if (!['style', 'data-spm', 'data-spm-anchor-id'].includes(attr.name)) {
+                result.push(`[${attr.name}="${attr.value}"]`);
+            }
+        }
+        return result;
     }
 
-    let selector = element.tagName.toLowerCase();
-    if (element.name) {
-        selector += `[name="${element.name}"]`;
+    // 获取元素的完整选择器
+    function getFullSelector(el) {
+        let selector = el.tagName.toLowerCase();
+        
+        // 添加id
+        if (el.id) {
+            return selector + '#' + el.id;
+        }
+        
+        // 添加所有类名
+        if (el.className) {
+            const classes = Array.from(el.classList).join('.');
+            if (classes) {
+                selector += '.' + classes;
+            }
+        }
+        
+        // 添加其他属性
+        const attrs = getAllAttributes(el);
+        if (attrs.length > 0) {
+            selector += attrs.join('');
+        }
+        
+        return selector;
     }
-    
-    // 添加其他可能有用的属性
-    if (element.type) {
-        selector += `[type="${element.type}"]`;
+
+    // 获取父元素的选择器（最多往上查找3层）
+    function getParentSelectors(el, maxLevels = 3) {
+        let selectors = [];
+        let current = el;
+        let level = 0;
+        
+        while (current.parentElement && level < maxLevels) {
+            const parentSelector = getFullSelector(current.parentElement);
+            if (parentSelector) {
+                selectors.unshift(parentSelector);
+            }
+            current = current.parentElement;
+            level++;
+        }
+        
+        return selectors;
     }
-    if (element.value) {
-        selector += `[value="${element.value}"]`;
+
+    // 生成多个可能的选择器组合
+    function generateSelectors(el) {
+        const selectors = [];
+        const fullSelector = getFullSelector(el);
+        const parentSelectors = getParentSelectors(el);
+        
+        // 1. 完整的选择器（包含所有属性）
+        selectors.push(fullSelector);
+        
+        // 2. 带一层父元素的选择器
+        if (parentSelectors.length > 0) {
+            selectors.push(`${parentSelectors[parentSelectors.length - 1]} > ${fullSelector}`);
+        }
+        
+        // 3. 带所有父元素的选择器
+        if (parentSelectors.length > 0) {
+            selectors.push(`${parentSelectors.join(' ')} > ${fullSelector}`);
+        }
+        
+        return selectors;
     }
-    
-    return selector;
+
+    // 测试选择器的唯一性
+    function testSelector(selector) {
+        try {
+            const elements = document.querySelectorAll(selector);
+            return elements.length === 1 ? selector : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // 获取最佳选择器
+    const selectors = generateSelectors(element);
+    for (const selector of selectors) {
+        const validSelector = testSelector(selector);
+        if (validSelector) {
+            return validSelector;
+        }
+    }
+
+    // 如果没有找到唯一的选择器，返回完整路径
+    return selectors[selectors.length - 1];
 }
 
 // 添加选择器复制功能
@@ -45,6 +123,8 @@ function enableSelectorCopy() {
                     padding: 10px;
                     border-radius: 4px;
                     z-index: 10000;
+                    max-width: 80%;
+                    word-break: break-all;
                 `;
                 document.body.appendChild(tip);
                 setTimeout(() => tip.remove(), 3000);
