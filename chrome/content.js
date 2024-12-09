@@ -150,40 +150,59 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // 等待页面元素加载
         setTimeout(async function() {
             try {
+                console.log('开始填充内容，配置:', config);
+
                 // 填充标题
                 const titleInput = document.querySelector(config.titleSelector);
+                console.log('标题输入框:', titleInput, '选择器:', config.titleSelector);
                 if (titleInput && config.titleContent) {
                     titleInput.value = config.titleContent;
                     titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    console.log('标题已填充');
+                    // 触发change事件
+                    titleInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
 
                 // 填充价格
                 const priceInput = document.querySelector(config.priceSelector);
+                console.log('价格输入框:', priceInput, '选择器:', config.priceSelector);
                 if (priceInput && config.price) {
                     priceInput.value = config.price;
                     priceInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    console.log('价格已填充');
+                    // 触发change事件
+                    priceInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
 
                 // 填充库存
                 const stockInput = document.querySelector(config.stockSelector);
+                console.log('库存输入框:', stockInput, '选择器:', config.stockSelector);
                 if (stockInput) {
                     stockInput.value = "9999";
                     stockInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    console.log('库存已填充');
+                    // 触发change事件
+                    stockInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
 
                 // 选择24小时发货
                 const shipTimeRadio = document.querySelector(config.shipTimeSelector);
+                console.log('发货时间选择框:', shipTimeRadio, '选择器:', config.shipTimeSelector);
                 if (shipTimeRadio) {
                     shipTimeRadio.click();
+                    console.log('已选择24小时发货');
                 }
 
                 // 点击文字按钮并填写详情
                 const textButton = document.querySelector(config.textButtonSelector);
+                console.log('文字按钮:', textButton, '选择器:', config.textButtonSelector);
                 if (textButton) {
                     textButton.click();
+                    console.log('已点击文字按钮');
                     // 等待文本模块加载
                     setTimeout(() => {
                         const detailTextArea = document.querySelector(config.detailEditorSelector);
+                        console.log('详情编辑器:', detailTextArea, '选择器:', config.detailEditorSelector);
                         if (detailTextArea && config.detailContent) {
                             // 模拟双击
                             detailTextArea.dispatchEvent(new MouseEvent('dblclick', {
@@ -191,23 +210,30 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                                 cancelable: true,
                                 view: window
                             }));
+                            console.log('已双击详情编辑器');
                             
                             // 等待编辑器完全打开
                             setTimeout(() => {
                                 const editor = document.querySelector(config.detailEditorSelector + ' textarea');
+                                console.log('详情文本框:', editor);
                                 if (editor) {
                                     editor.value = config.detailContent;
                                     editor.dispatchEvent(new Event('input', { bubbles: true }));
+                                    // 触发change事件
+                                    editor.dispatchEvent(new Event('change', { bubbles: true }));
+                                    console.log('详情内容已填充');
                                 }
-                            }, 500);
+                            }, 1000);
                         }
-                    }, 500);
+                    }, 1000);
                 }
 
                 // 处理图片上传
                 const imageUploadButton = document.querySelector(config.imageUploadSelector);
+                console.log('图片上传按钮:', imageUploadButton, '选择器:', config.imageUploadSelector);
                 if (imageUploadButton && config.imagePath) {
                     imageUploadButton.click();
+                    console.log('已点击图片上传按钮');
                     // 提示用户手动选择文件
                     alert('请在弹出的文件选择框中选择图片：' + config.imagePath);
                 }
@@ -215,7 +241,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 console.error('填充内容时发生错误:', error);
                 alert('填充内容时发生错误: ' + error.message);
             }
-        }, 1000);
+        }, 2000); // 增加等待时间到2秒
     } else if (request.action === 'enableSelectorCopy') {
         enableSelectorCopy();
     }
