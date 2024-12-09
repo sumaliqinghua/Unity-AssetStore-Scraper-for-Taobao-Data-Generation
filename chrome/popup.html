@@ -26,6 +26,7 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      margin-top: 10px;
     }
     button:hover {
       background-color: #ff8533;
@@ -34,31 +35,23 @@
 </head>
 <body>
   <div class="form-group">
-    <label>标题选择器:</label>
-    <input type="text" id="titleSelector" placeholder="输入标题输入框的CSS选择器">
+    <label>商品标题:</label>
+    <input type="text" id="titleContent" placeholder="输入商品标题">
   </div>
   <div class="form-group">
-    <label>内容选择器:</label>
-    <input type="text" id="contentSelector" placeholder="输入内容输入框的CSS选择器">
-  </div>
-  <div class="form-group">
-    <label>图片上传按钮选择器:</label>
-    <input type="text" id="imageSelector" placeholder="输入图片上传按钮的CSS选择器">
-  </div>
-  <div class="form-group">
-    <label>标题内容:</label>
-    <input type="text" id="titleContent" placeholder="输入要填写的标题">
+    <label>商品价格:</label>
+    <input type="number" id="price" placeholder="输入商品价格" step="0.01">
   </div>
   <div class="form-group">
     <label>详情内容:</label>
-    <textarea id="detailContent" rows="4" placeholder="输入要填写的详情内容"></textarea>
+    <textarea id="detailContent" rows="4" placeholder="输入商品详情描述"></textarea>
   </div>
   <div class="form-group">
     <label>图片路径:</label>
-    <input type="text" id="imagePath" placeholder="输入本地图片路径">
+    <input type="text" id="imagePath" placeholder="输入本地图片完整路径">
   </div>
   <button id="saveConfig">保存配置</button>
-  <button id="fillContent">填充内容</button>
+  <button id="fillContent">开始填充</button>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -5,11 +5,18 @@
   "description": "自动填写淘宝卖家页面内容并上传图片",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*.taobao.com/*"
   ],
   "content_scripts": [
     {
-      "matches": ["*://*.taobao.com/*"],
+      "matches": [
+        "*://*.taobao.com/*",
+        "*://*.item.upload.taobao.com/*"
+      ],
       "js": ["content.js"]
     }
   ],
