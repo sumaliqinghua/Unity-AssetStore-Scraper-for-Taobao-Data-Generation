@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      background-color: #ff6a00;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #ff8533;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-group">
+    <label>标题选择器:</label>
+    <input type="text" id="titleSelector" placeholder="输入标题输入框的CSS选择器">
+  </div>
+  <div class="form-group">
+    <label>内容选择器:</label>
+    <input type="text" id="contentSelector" placeholder="输入内容输入框的CSS选择器">
+  </div>
+  <div class="form-group">
+    <label>图片上传按钮选择器:</label>
+    <input type="text" id="imageSelector" placeholder="输入图片上传按钮的CSS选择器">
+  </div>
+  <div class="form-group">
+    <label>标题内容:</label>
+    <input type="text" id="titleContent" placeholder="输入要填写的标题">
+  </div>
+  <div class="form-group">
+    <label>详情内容:</label>
+    <textarea id="detailContent" rows="4" placeholder="输入要填写的详情内容"></textarea>
+  </div>
+  <div class="form-group">
+    <label>图片路径:</label>
+    <input type="text" id="imagePath" placeholder="输入本地图片路径">
+  </div>
+  <button id="saveConfig">保存配置</button>
+  <button id="fillContent">填充内容</button>
+  <script src="popup.js"></script>
+</body>
+</html>
