@@ -1,3 +1,58 @@
+// 获取元素的选择器
+function getSelector(element) {
+    if (element.id) {
+        return '#' + element.id;
+    }
+    
+    if (element.className) {
+        const classes = Array.from(element.classList).join('.');
+        return '.' + classes;
+    }
+
+    let selector = element.tagName.toLowerCase();
+    if (element.name) {
+        selector += `[name="${element.name}"]`;
+    }
+    
+    // 添加其他可能有用的属性
+    if (element.type) {
+        selector += `[type="${element.type}"]`;
+    }
+    if (element.value) {
+        selector += `[value="${element.value}"]`;
+    }
+    
+    return selector;
+}
+
+// 添加选择器复制功能
+function enableSelectorCopy() {
+    document.addEventListener('click', function(e) {
+        if (e.altKey) {  // 只在按住Alt键时触发
+            e.preventDefault();
+            const selector = getSelector(e.target);
+            // 复制到剪贴板
+            navigator.clipboard.writeText(selector).then(() => {
+                // 显示提示
+                const tip = document.createElement('div');
+                tip.textContent = `已复制选择器: ${selector}`;
+                tip.style.cssText = `
+                    position: fixed;
+                    top: 10px;
+                    right: 10px;
+                    background: #4CAF50;
+                    color: white;
+                    padding: 10px;
+                    border-radius: 4px;
+                    z-index: 10000;
+                `;
+                document.body.appendChild(tip);
+                setTimeout(() => tip.remove(), 3000);
+            });
+        }
+    });
+}
+
 // 监听来自popup的消息
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === 'fillContent') {
@@ -81,5 +136,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 alert('填充内容时发生错误: ' + error.message);
             }
         }, 1000);
+    } else if (request.action === 'enableSelectorCopy') {
+        enableSelectorCopy();
     }
 });
+
+// 自动启用选择器复制功能
+enableSelectorCopy();
