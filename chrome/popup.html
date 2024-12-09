@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <style>
     body {
-      width: 300px;
+      width: 400px;
       padding: 10px;
     }
     .form-group {
@@ -13,10 +13,32 @@
     label {
       display: block;
       margin-bottom: 5px;
+      font-weight: bold;
     }
     input, textarea {
       width: 100%;
       padding: 5px;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+    }
+    .tab {
+      padding: 8px 15px;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      background: #f5f5f5;
+    }
+    .tab.active {
+      background: #ff6a00;
+      color: white;
+      border-color: #ff6a00;
     }
     button {
       width: 100%;
@@ -34,24 +56,68 @@
   </style>
 </head>
 <body>
-  <div class="form-group">
-    <label>商品标题:</label>
-    <input type="text" id="titleContent" placeholder="输入商品标题">
+  <div class="tabs">
+    <div class="tab active" data-tab="content">内容配置</div>
+    <div class="tab" data-tab="selectors">选择器配置</div>
   </div>
-  <div class="form-group">
-    <label>商品价格:</label>
-    <input type="number" id="price" placeholder="输入商品价格" step="0.01">
+
+  <div id="content-tab" class="tab-content active">
+    <div class="form-group">
+      <label>商品标题:</label>
+      <input type="text" id="titleContent" placeholder="输入商品标题">
+    </div>
+    <div class="form-group">
+      <label>商品价格:</label>
+      <input type="number" id="price" placeholder="输入商品价格" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>详情内容:</label>
+      <textarea id="detailContent" rows="4" placeholder="输入商品详情描述"></textarea>
+    </div>
+    <div class="form-group">
+      <label>图片路径:</label>
+      <input type="text" id="imagePath" placeholder="输入本地图片完整路径">
+    </div>
   </div>
-  <div class="form-group">
-    <label>详情内容:</label>
-    <textarea id="detailContent" rows="4" placeholder="输入商品详情描述"></textarea>
+
+  <div id="selectors-tab" class="tab-content">
+    <div class="form-group">
+      <label>确认按钮选择器:</label>
+      <input type="text" id="confirmSelector" placeholder="例：.next-btn-helper" value=".next-btn-helper">
+    </div>
+    <div class="form-group">
+      <label>标题输入框选择器:</label>
+      <input type="text" id="titleSelector" placeholder="例：input[name='title']" value=".next-input.next-input-single.next-input-medium[name='title']">
+    </div>
+    <div class="form-group">
+      <label>价格输入框选择器:</label>
+      <input type="text" id="priceSelector" placeholder="例：input[name='price']" value="input[name='price']">
+    </div>
+    <div class="form-group">
+      <label>库存输入框选择器:</label>
+      <input type="text" id="stockSelector" placeholder="例：input[name='quantity']" value="input[name='quantity']">
+    </div>
+    <div class="form-group">
+      <label>24小时发货选择器:</label>
+      <input type="text" id="shipTimeSelector" placeholder="例：input[value='24']" value="input[value='24']">
+    </div>
+    <div class="form-group">
+      <label>文字按钮选择器:</label>
+      <input type="text" id="textButtonSelector" placeholder="例：button.text-btn" value="button:contains('文字')">
+    </div>
+    <div class="form-group">
+      <label>详情编辑器选择器:</label>
+      <input type="text" id="detailEditorSelector" placeholder="例：.detail-text-editor" value=".detail-text-editor">
+    </div>
+    <div class="form-group">
+      <label>图片上传按钮选择器:</label>
+      <input type="text" id="imageUploadSelector" placeholder="例：.next-upload-select" value=".next-upload-select">
+    </div>
   </div>
-  <div class="form-group">
-    <label>图片路径:</label>
-    <input type="text" id="imagePath" placeholder="输入本地图片完整路径">
-  </div>
+
   <button id="saveConfig">保存配置</button>
   <button id="fillContent">开始填充</button>
+
   <script src="popup.js"></script>
 </body>
 </html>
