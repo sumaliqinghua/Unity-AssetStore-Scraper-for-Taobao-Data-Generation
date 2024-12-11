@@ -16,28 +16,26 @@ function getSelector(element) {
 
     // 获取元素的完整选择器
     function getFullSelector(el) {
-        let selector = el.tagName.toLowerCase();
-        
-        // 添加id
         if (el.id) {
-            return selector + '#' + el.id;
+            return '#' + el.id;
         }
         
-        // 添加所有类名
-        if (el.className) {
-            const classes = Array.from(el.classList).join('.');
-            if (classes) {
-                selector += '.' + classes;
+        let path = [];
+        while (el) {
+            let selector = el.tagName.toLowerCase();
+            let parent = el.parentElement;
+            
+            if (parent) {
+                let children = parent.children;
+                let index = Array.from(children).indexOf(el) + 1;
+                selector += `:nth-child(${index})`;
             }
+            
+            path.unshift(selector);
+            el = parent;
         }
         
-        // 添加其他属性
-        const attrs = getAllAttributes(el);
-        if (attrs.length > 0) {
-            selector += attrs.join('');
-        }
-        
-        return selector;
+        return path.join(' > ');
     }
 
     // 获取父元素的选择器（最多往上查找3层）
@@ -212,18 +210,18 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                             }));
                             console.log('已双击详情编辑器');
                             
-                            // 等待编辑器完全打开
-                            setTimeout(() => {
-                                const editor = document.querySelector(config.detailEditorSelector + ' textarea');
-                                console.log('详情文本框:', editor);
-                                if (editor) {
-                                    editor.value = config.detailContent;
-                                    editor.dispatchEvent(new Event('input', { bubbles: true }));
-                                    // 触发change事件
-                                    editor.dispatchEvent(new Event('change', { bubbles: true }));
-                                    console.log('详情内容已填充');
-                                }
-                            }, 1000);
+                            // // 等待编辑器完全打开
+                            // setTimeout(() => {
+                            //     const editor = document.querySelector(config.detailEditorSelector + ' textarea');
+                            //     console.log('详情文本框:', editor);
+                            //     if (editor) {
+                            //         editor.value = config.detailContent;
+                            //         editor.dispatchEvent(new Event('input', { bubbles: true }));
+                            //         // 触发change事件
+                            //         editor.dispatchEvent(new Event('change', { bubbles: true }));
+                            //         console.log('详情内容已填充');
+                            //     }
+                            // }, 1000);
                         }
                     }, 1000);
                 }
