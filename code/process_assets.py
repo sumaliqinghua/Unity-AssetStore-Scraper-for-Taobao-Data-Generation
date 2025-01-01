@@ -46,8 +46,11 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
     print(f"找到资源: {search_result['title']}")
     print(f"资源链接: {search_result['link']}")
 
-    # 2. 使用 WebsiteScraper 处理内容
-    scraper = WebsiteScraper(base_url="https://unityassets4free.com/")
+    # 3. 使用 WebsiteScraper 处理内容
+    scraper = WebsiteScraper(
+        base_url="https://unityassets4free.com/",
+        disable_ssl_verification=disable_ssl_verification
+    )
 
     # 配置请求会话（添加自定义 TLS 支持）
     session = scraper.session
@@ -64,27 +67,23 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
 
     try:
         # 获取网页内容
-        response = session.get(
-            search_result['link'],
-            timeout=10,
-            proxies=proxies,  # 设置代理
-            verify=not disable_ssl_verification  # 是否禁用 SSL 验证
-        )
-        if response.status_code != 200:
-            print(f"无法访问资源页面, 状态码: {response.status_code}")
-            return False
+        html_content = scraper.get_page_content(search_result['link'], timeout=30)
 
         # 解析文章内容，使用 Google 搜索结果的标题
         article_data = scraper.parse_article(
-            response.text,
+            html_content,
             search_result['link'],
             custom_title=search_result['title'],
-            file_path=file_info['full_path']
+            file_path=file_info['full_path']  # 确保传入文件路径
         )
 
         if not article_data:
             print("解析文章失败")
             return False
+
+        # 确保article_data包含file_path
+        if 'file_path' not in article_data:
+            article_data['file_path'] = file_info['full_path']
 
         # 保存文章内容
         if scraper.save_article(article_data):
@@ -157,4 +156,4 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
 if __name__ == "__main__":
     # 示例用法
     target_directory = r"F:\0游戏教程\0tele"  # 替换为实际目录
-    process_assets(target_directory, file_indices=[5, 6], disable_ssl_verification=True)  # 处理多个文件
+    process_assets(target_directory, file_indices=[5, 4], disable_ssl_verification=True)  # 处理多个文件

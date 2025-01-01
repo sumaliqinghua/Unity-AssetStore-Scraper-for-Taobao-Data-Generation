@@ -1,0 +1,9 @@
+Title: 2D RPG Starter Kit - Complete Game Template
+URL: https://unityassets4free.com/2d-rpg-starter-kit-complete-game-template/
+Image: https://unityassets4free.com/wp-content/uploads/2023/06/2d-rpg-starter-kit-complete-game-template-e1686110421875.webp
+
+Content:
+The Complete 2D RPG Kit – A 2D RPG Starter Kit In a Box!
+This template starter kit gives you a huge head start on making your very own 2D top-down RPG game complete with player movement (using the new input system), simple enemy behavior, level loading through portals, damage, health, weapon switching, menu system, tilemap level creation, coin pickups, and more.
+This template was designed to be beginner friendly and easy to understand, with all code fully commented and well spaced.
+In addition to the asset, there is also a detailed video tutorial series that walks you through how the template works in detail, and how to expand on it to add your own content. It’s everything you need to make an awesome 2D RPG!

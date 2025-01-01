@@ -4,7 +4,11 @@ from selenium.webdriver.common.keys import Keys
 import time
 
 def google_search(query):
-    driver = webdriver.Chrome()  # 确保已安装 ChromeDriver
+    # 配置Chrome选项
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('--proxy-server=http://127.0.0.1:2612')  # 添加代理设置
+    
+    driver = webdriver.Chrome(options=chrome_options)  # 确保已安装 ChromeDriver
     try:
         driver.get("https://www.google.com")
 
