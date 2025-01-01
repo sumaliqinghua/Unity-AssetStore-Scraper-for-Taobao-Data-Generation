@@ -10,6 +10,7 @@ from urllib.parse import urljoin
 import json
 from hashlib import md5
 from translate import Translator
+import pandas as pd
 
 class WebsiteScraper:
     def __init__(self, base_url, max_workers=3, delay=1):
@@ -82,6 +83,24 @@ class WebsiteScraper:
         full_path = os.path.join(self.base_download_dir, dir_name)
         os.makedirs(full_path, exist_ok=True)
         return full_path
+
+    def save_to_excel(self, data):
+        """保存数据到Excel文件"""
+        excel_path = os.path.join(self.base_download_dir, 'assets_data.xlsx')
+        try:
+            # 如果文件存在，读取现有数据
+            if os.path.exists(excel_path):
+                df_existing = pd.read_excel(excel_path)
+                df_new = pd.DataFrame([data])
+                df_combined = pd.concat([df_existing, df_new], ignore_index=True)
+            else:
+                df_combined = pd.DataFrame([data])
+            
+            # 保存到Excel
+            df_combined.to_excel(excel_path, index=False)
+            self.logger.info(f"数据已保存到Excel: {excel_path}")
+        except Exception as e:
+            self.logger.error(f"保存Excel时出错: {e}")
 
     def download_image(self, img_url, save_dir):
         if not img_url:
@@ -177,6 +196,17 @@ class WebsiteScraper:
             metadata_filename = os.path.join(article_dir, 'metadata.json')
             with open(metadata_filename, 'w', encoding='utf-8') as f:
                 json.dump(article_data, f, ensure_ascii=False, indent=2)
+            
+            # 保存数据到Excel
+            data = {
+                'title': article_data['original_title'],
+                'original_content': article_data['original_content'],
+                'translated_content': article_data['content'],
+                'image_path': img_filename,
+                'url': article_data['url'],
+                'save_time': time.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            self.save_to_excel(data)
             
             return True
             
