@@ -88,13 +88,22 @@ class WebsiteScraper:
         """保存数据到Excel文件"""
         excel_path = os.path.join(self.base_download_dir, 'assets_data.xlsx')
         try:
+            # 准备数据
+            df_row = {
+                'title': data['title'],
+                'url': data['url'],
+                'file_path': data['file_path'],  # 添加文件路径
+                'content': data['content'],
+                'translated_content': data['translated_content']
+            }
+            
             # 如果文件存在，读取现有数据
             if os.path.exists(excel_path):
                 df_existing = pd.read_excel(excel_path)
-                df_new = pd.DataFrame([data])
+                df_new = pd.DataFrame([df_row])
                 df_combined = pd.concat([df_existing, df_new], ignore_index=True)
             else:
-                df_combined = pd.DataFrame([data])
+                df_combined = pd.DataFrame([df_row])
             
             # 保存到Excel
             df_combined.to_excel(excel_path, index=False)
@@ -128,7 +137,7 @@ class WebsiteScraper:
             self.logger.error(f"下载图片失败 {img_url}: {e}")
             return None
 
-    def parse_article(self, html_content, url):
+    def parse_article(self, html_content, url, custom_title=None, file_path=None):
         try:
             soup = BeautifulSoup(html_content, 'html.parser')
             article = soup.find('article')
@@ -136,9 +145,8 @@ class WebsiteScraper:
             if not article:
                 return None
                 
-            # 提取数据
-            title = article.find('h2', class_='single-post-title')
-            title = title.text.strip() if title else "无标题"
+            # 使用提供的标题或从文章中提取
+            title = custom_title if custom_title else article.find('h2', class_='single-post-title').text.strip() if article.find('h2', class_='single-post-title') else "无标题"
             
             thumbnail = article.find('div', class_='thumbnail')
             img_url = thumbnail.find('img')['src'] if thumbnail else None
@@ -146,21 +154,20 @@ class WebsiteScraper:
             content = article.find('div', class_='entry-content')
             content_text = '\n'.join([p.text.strip() for p in content.find_all('p')]) if content else ''
             
-            # 翻译标题和内容
-            translated_title = self.translate_text(title)
+            # 翻译内容
             translated_content = self.translate_text(content_text)
             
             return {
-                'original_title': title,
-                'title': translated_title,
-                'image_url': img_url,
-                'original_content': content_text,
-                'content': translated_content,
-                'url': url
+                'title': title,
+                'url': url,
+                'file_path': file_path,  # 添加文件路径
+                'img_url': img_url,
+                'content': content_text,
+                'translated_content': translated_content
             }
             
         except Exception as e:
-            self.logger.error(f"解析文章失败 {url}: {e}")
+            self.logger.error(f"解析文章失败: {e}")
             return None
 
     def save_article(self, article_data):
@@ -169,28 +176,28 @@ class WebsiteScraper:
             
         try:
             # 为文章创建独立目录
-            article_dir = self.create_article_directory(article_data['original_title'])
+            article_dir = self.create_article_directory(article_data['title'])
             
             # 下载图片
-            img_filename = self.download_image(article_data['image_url'], article_dir)
+            img_filename = self.download_image(article_data['img_url'], article_dir)
             
             # 保存原文
             original_content_filename = os.path.join(article_dir, 'original.txt')
             with open(original_content_filename, 'w', encoding='utf-8') as f:
-                f.write(f"Title: {article_data['original_title']}\n")
+                f.write(f"Title: {article_data['title']}\n")
                 f.write(f"URL: {article_data['url']}\n")
-                f.write(f"Image: {article_data['image_url']}\n\n")
+                f.write(f"Image: {article_data['img_url']}\n\n")
                 f.write("Content:\n")
-                f.write(article_data['original_content'])
+                f.write(article_data['content'])
             
             # 保存翻译后的内容
             translated_content_filename = os.path.join(article_dir, 'translated.txt')
             with open(translated_content_filename, 'w', encoding='utf-8') as f:
                 f.write(f"标题: {article_data['title']}\n")
                 f.write(f"URL: {article_data['url']}\n")
-                f.write(f"图片: {article_data['image_url']}\n\n")
+                f.write(f"图片: {article_data['img_url']}\n\n")
                 f.write("正文内容:\n")
-                f.write(article_data['content'])
+                f.write(article_data['translated_content'])
             
             # 保存元数据
             metadata_filename = os.path.join(article_dir, 'metadata.json')
@@ -199,9 +206,9 @@ class WebsiteScraper:
             
             # 保存数据到Excel
             data = {
-                'title': article_data['original_title'],
-                'original_content': article_data['original_content'],
-                'translated_content': article_data['content'],
+                'title': article_data['title'],
+                'content': article_data['content'],
+                'translated_content': article_data['translated_content'],
                 'image_path': img_filename,
                 'url': article_data['url'],
                 'save_time': time.strftime('%Y-%m-%d %H:%M:%S')
@@ -211,7 +218,7 @@ class WebsiteScraper:
             return True
             
         except Exception as e:
-            self.logger.error(f"保存文章失败 {article_data['original_title']}: {e}")
+            self.logger.error(f"保存文章失败 {article_data['title']}: {e}")
             return False
 
     def process_url(self, url):
