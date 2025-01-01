@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'shipTimeSelector',
         'textButtonSelector',
         'detailEditorSelector',
+        'detailContentSelector',
         'imageUploadSelector'
     ], function(result) {
         // 内容配置
@@ -45,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('shipTimeSelector').value = result.shipTimeSelector || 'input[value="24"]';
         document.getElementById('textButtonSelector').value = result.textButtonSelector || 'button:contains("文字")';
         document.getElementById('detailEditorSelector').value = result.detailEditorSelector || '.detail-text-editor';
+        document.getElementById('detailContentSelector').value = result.detailContentSelector || '.detail-text-editor';
         document.getElementById('imageUploadSelector').value = result.imageUploadSelector || '.next-upload-select';
     });
 
@@ -64,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
             shipTimeSelector: document.getElementById('shipTimeSelector').value,
             textButtonSelector: document.getElementById('textButtonSelector').value,
             detailEditorSelector: document.getElementById('detailEditorSelector').value,
+            detailContentSelector: document.getElementById('detailContentSelector').value,
             imageUploadSelector: document.getElementById('imageUploadSelector').value
         };
 
@@ -111,6 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     shipTimeSelector: document.getElementById('shipTimeSelector').value,
                     textButtonSelector: document.getElementById('textButtonSelector').value,
                     detailEditorSelector: document.getElementById('detailEditorSelector').value,
+                    detailContentSelector: document.getElementById('detailContentSelector').value,
                     imageUploadSelector: document.getElementById('imageUploadSelector').value
                 }
             });

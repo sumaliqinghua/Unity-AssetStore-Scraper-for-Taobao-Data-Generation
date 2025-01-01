@@ -210,18 +210,27 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                             }));
                             console.log('已双击详情编辑器');
                             
-                            // // 等待编辑器完全打开
-                            // setTimeout(() => {
-                            //     const editor = document.querySelector(config.detailEditorSelector + ' textarea');
-                            //     console.log('详情文本框:', editor);
-                            //     if (editor) {
-                            //         editor.value = config.detailContent;
-                            //         editor.dispatchEvent(new Event('input', { bubbles: true }));
-                            //         // 触发change事件
-                            //         editor.dispatchEvent(new Event('change', { bubbles: true }));
-                            //         console.log('详情内容已填充');
-                            //     }
-                            // }, 1000);
+                            // 增加等待时间，确保编辑器完全打开
+                            setTimeout(() => {
+                                // 查找真正的textarea元素
+                                const editor = document.querySelector('textarea.textarea--plO0U');
+                                console.log('找到详情文本框:', editor);
+                                if (editor) {
+                                    // 聚焦元素
+                                    editor.focus();
+                                    // 设置值
+                                    editor.value = config.detailContent;
+                                    // 触发必要的事件
+                                    editor.dispatchEvent(new Event('input', { bubbles: true }));
+                                    editor.dispatchEvent(new Event('change', { bubbles: true }));
+                                    // 触发键盘事件以确保内容更新
+                                    editor.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+                                    editor.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+                                    console.log('详情内容已填充:', config.detailContent);
+                                } else {
+                                    console.error('未找到详情编辑器textarea元素');
+                                }
+                            }, 500); // 等待500ms确保编辑器已打开
                         }
                     }, 1000);
                 }
