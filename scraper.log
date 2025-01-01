@@ -21,3 +21,11 @@
 2025-01-02 00:04:58,400 - ERROR - 翻译失败: HTTPSConnectionPool(host='api.mymemory.translated.net', port=443): Max retries exceeded with url: /get?q=The+Complete+2D+RPG+Kit+%E2%80%93+A+2D+RPG+Starter+Kit+In+a+Box%21%0AThis+template+starter+kit+gives+you+a+huge+head+start+on+making+your+very+own+2D+top-down+RPG+game+complete+with+player+movement+%28using+the+new+input+system%29%2C+simple+enemy+behavior%2C+level+loading+through+portals%2C+damage%2C+health%2C+weapon+switching%2C+menu+system%2C+tilemap+level+creation%2C+coin+pickups%2C+and+more.%0AThis+template+was+designed+to+be+beginner+friendly+and+easy+to+understand%2C+with+all+code+fully+commented+and+well+spaced.%0AIn+addition+t&langpair=en%7Czh (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
 2025-01-02 00:04:58,427 - ERROR - 下载图片失败 https://unityassets4free.com/wp-content/uploads/2023/06/2d-rpg-starter-kit-complete-game-template-e1686110421875.webp: HTTPSConnectionPool(host='unityassets4free.com', port=443): Max retries exceeded with url: /wp-content/uploads/2023/06/2d-rpg-starter-kit-complete-game-template-e1686110421875.webp (Caused by ProxyError('Cannot connect to proxy.', FileNotFoundError(2, 'No such file or directory')))
 2025-01-02 00:05:03,041 - INFO - 数据已保存到Excel: downloads\assets_data.xlsx
+2025-01-02 00:33:44,494 - WARNING - 直接访问失败，尝试使用代理: HTTPSConnectionPool(host='unityassets4free.com', port=443): Max retries exceeded with url: /2d-rpg-starter-kit-complete-game-template/ (Caused by ProxyError('Cannot connect to proxy.', FileNotFoundError(2, 'No such file or directory')))
+2025-01-02 00:35:28,585 - INFO - 已下载图片: downloads\2D_Soft_Body_-_Free_Download\thumbnail.webp
+2025-01-02 00:35:31,173 - INFO - 数据已保存到Excel: downloads\assets_data.xlsx
+2025-01-02 00:36:07,650 - INFO - 已下载图片: downloads\2D_RPG_Starter_Kit_-_Complete_Game_Template\thumbnail.webp
+2025-01-02 00:36:07,686 - INFO - 数据已保存到Excel: downloads\assets_data.xlsx
+2025-01-02 00:45:28,039 - WARNING - 无法读取robots.txt: <urlopen error [WinError 10053] 你的主机中的软件中止了一个已建立的连接。>
+2025-01-02 00:45:58,160 - INFO - 已下载图片: downloads\2D_RPG_Starter_Kit_-_Complete_Game_Template\thumbnail.webp
+2025-01-02 00:46:00,770 - INFO - 数据已保存到Excel: downloads\assets_data.xlsx

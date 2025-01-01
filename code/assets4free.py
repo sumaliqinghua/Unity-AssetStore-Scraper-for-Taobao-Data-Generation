@@ -101,9 +101,12 @@ class WebsiteScraper:
             df_row = {
                 'title': data.get('title', ''),
                 'url': data.get('url', ''),
-                'file_path': data.get('file_path', ''),  # 使用get方法安全获取
-                'content': data.get('content', ''),
-                'translated_content': data.get('translated_content', '')
+                'file_path': data.get('file_path', ''),  # 原文件的绝对路径
+                'file_name': data.get('file_name', ''),  # 处理后的name
+                'original_content': data.get('content', ''),  # 改为original_content
+                'translated_content': data.get('translated_content', ''),
+                'image_path': data.get('image_path', ''),  # 图片的绝对路径
+                'save_time': time.strftime('%Y-%m-%d %H:%M:%S')  # 保存时间
             }
             
             # 如果文件存在，读取现有数据
@@ -194,12 +197,16 @@ class WebsiteScraper:
             # 翻译内容
             translated_content = self.translate_text(content_text)
             
+            # 生成处理后的文件名
+            file_name = title.replace(' ', '_').replace(':', '_')
+            
             return {
                 'title': title,
                 'url': url,
-                'file_path': file_path,  # 添加文件路径
+                'file_path': file_path,  # 原文件的绝对路径
+                'file_name': file_name,  # 处理后的name
                 'img_url': img_url,
-                'content': content_text,
+                'content': content_text,  # 这个会在save_to_excel中被映射为original_content
                 'translated_content': translated_content
             }
             
@@ -215,7 +222,7 @@ class WebsiteScraper:
             # 为文章创建独立目录
             article_dir = self.create_article_directory(article_data['title'])
             
-            # 下载图片
+            # 下载图片并获取绝对路径
             img_filename = self.download_image(article_data['img_url'], article_dir)
             
             # 保存原文
@@ -244,18 +251,19 @@ class WebsiteScraper:
             # 保存数据到Excel
             data = {
                 'title': article_data['title'],
+                'url': article_data['url'],
+                'file_path': article_data['file_path'],
+                'file_name': article_data['file_name'],
                 'content': article_data['content'],
                 'translated_content': article_data['translated_content'],
-                'image_path': img_filename,
-                'url': article_data['url'],
-                'save_time': time.strftime('%Y-%m-%d %H:%M:%S')
+                'image_path': os.path.abspath(img_filename) if img_filename else ''
             }
-            self.save_to_excel(data)
             
+            self.save_to_excel(data)
             return True
             
         except Exception as e:
-            self.logger.error(f"保存文章失败 {article_data['title']}: {e}")
+            self.logger.error(f"保存文章失败: {e}")
             return False
 
     def process_url(self, url):
