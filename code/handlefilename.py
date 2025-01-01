@@ -1,11 +1,13 @@
 import os
 import re
 
-# 文件路径
-directory = r"F:\0游戏教程\0tele"
-
-# 获取文件名的函数
-def clean_file_names(directory, file_index=0):
+def clean_file_names(directory, file_index=None):
+    """
+    获取并清理文件名
+    :param directory: 文件目录路径
+    :param file_index: 如果是整数，返回单个文件信息；如果是None，返回所有文件信息
+    :return: 单个文件信息字典或文件信息字典列表
+    """
     # 列表存储最终的文件名和路径
     files_info = []
     
@@ -30,22 +32,33 @@ def clean_file_names(directory, file_index=0):
     # 按文件名排序
     files_info.sort(key=lambda x: x['original_name'])
     
-    # 如果列表不为空且索引有效，返回指定索引的文件信息
-    if files_info and 0 <= file_index < len(files_info):
-        return files_info[file_index]
-    elif files_info:
-        return files_info[0]  # 如果索引无效但列表不为空，返回第一个文件
-    else:
-        return None  # 如果没有文件，返回None
+    # 如果没有文件，返回空列表
+    if not files_info:
+        return [] if file_index is None else None
+        
+    # 如果指定了索引，返回单个文件信息
+    if isinstance(file_index, int):
+        if 0 <= file_index < len(files_info):
+            return files_info[file_index]
+        return None  # 如果索引无效，返回None
+    
+    # 否则返回所有文件信息
+    return files_info
 
-# 调用函数并打印结果
-cleaned_files = clean_file_names(directory, file_index=1)
-if cleaned_files:
-    print("清理后的文件名：")
-    print(cleaned_files['cleaned_name'])
-    print("原始文件名：")
-    print(cleaned_files['original_name'])
-    print("文件路径：")
-    print(cleaned_files['full_path'])
-else:
-    print("没有找到文件。")
+if __name__ == "__main__":
+    # 示例用法
+    directory = r"F:\0游戏教程\0tele"
+    
+    # 获取所有文件
+    all_files = clean_file_names(directory)
+    print("\n所有文件:")
+    for i, file_info in enumerate(all_files):
+        print(f"{i}. {file_info['original_name']} -> {file_info['cleaned_name']}")
+    
+    # 获取特定文件
+    file_info = clean_file_names(directory, file_index=1)
+    if file_info:
+        print(f"\n第2个文件:")
+        print(f"清理后的名称: {file_info['cleaned_name']}")
+        print(f"原始文件名: {file_info['original_name']}")
+        print(f"文件路径: {file_info['full_path']}")

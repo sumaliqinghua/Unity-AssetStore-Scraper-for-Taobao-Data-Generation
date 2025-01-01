@@ -1,0 +1,27 @@
+Title: Overlay Filters 2D - Layered Post Processing Shaders
+URL: https://unityassets4free.com/overlay-filters-2d-layered-post-processing-shaders/
+Image: https://unityassets4free.com/wp-content/uploads/2024/08/overlay-filters-2d-layered-post-processing-shaders-e1722792704891.webp
+
+Content:
+Post-processing applied via Sprites, UI Images or Particles.
+Simply assign the shader and drag the sprite wherever you want.
+Compatibility:
+– Created specifically for 2D Games.
+– Does not support URP or HDRP.
+✨ New in 3.0 ✨
+– Added Water Reflection effect (reflects pixels on screen).
+♻️ 100% Refund Guarantee ♻️
+You are not satisfied with your purchase ?
+Contact me and I will either resolve your issues or refund you.
+⭐ Features ⭐
+– 23 Post-Processing Effects
+– Several Presets and Examples
+– Highly Customizable
+– Very Versatile
+– Effects can be Combined
+– Overlays can be Stacked
+– Sorting Order Matters
+– Compatible with Amplify Shader Editor
+✅ Example Use Cases ✅
+– Create fullscreen post-process effects.
+– Blur the background layers of your 2D game.

@@ -1,0 +1,15 @@
+标题: 2D Soft Body - Free Download
+URL: https://unityassets4free.com/2d-soft-body/
+图片: https://unityassets4free.com/wp-content/uploads/2023/08/2d-soft-body-e1691303676538.webp
+
+正文内容:
+2D Soft Body – is an asset to provide jelly physics into the Unity environment.
+Unity 2017.4 and newer is supported.
+????️ Try the WebGL Demo! | ???? Documentation
+Features:
+???? User-friendly editor
+Setup a few parameters and enjoy the beautiful jelly-physics effect
+???? High performance, mobile-friendly
+Works perfectly on mobile devices
+???? Easy to configure
+Configure parameters for simulating soft bodies in a few clicks

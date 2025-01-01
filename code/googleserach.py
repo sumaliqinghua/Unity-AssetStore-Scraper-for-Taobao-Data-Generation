@@ -1,3 +1,4 @@
+import site
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
@@ -28,9 +29,13 @@ def google_search(query):
     finally:
         driver.quit()
 
-result = google_search("site:assetstore.unity.com Zombie_Slayer")
-if result:
-    print(f"Title: {result['title']}")
-    print(f"Link: {result['link']}")
-else:
-    print("No results found")
+if __name__ == "__main__":
+    # 测试搜索功能
+    test_query = "site:assetstore.unity.com Unity Asset"
+    print(f"测试搜索: {test_query}")
+    result = google_search(test_query)
+    if result:
+        print(f"Title: {result['title']}")
+        print(f"Link: {result['link']}")
+    else:
+        print("No results found")
