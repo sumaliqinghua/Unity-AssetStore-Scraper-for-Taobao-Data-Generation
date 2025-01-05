@@ -1,7 +1,7 @@
 import os
 from handlefilename import clean_file_names
 from googleserach import google_search
-from assets4free import WebsiteScraper
+from assets4free_crawler import Assets4FreeCrawler
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from urllib3.util.ssl_ import create_urllib3_context
@@ -42,7 +42,7 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
         search_result = google_search(search_query)
 
         if not search_result:
-            print(f"未找到相关搜索结果 {file_info['cleaned_name']}")
+            print(f"未找到相关搜索结果 {search_query}")
             user_input = input("请输入新的搜索词（直接回车退出）: ")
             if not user_input:
                 return False
@@ -53,11 +53,8 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
     print(f"找到资源: {search_result['title']}")
     print(f"资源链接: {search_result['link']}")
 
-    # 3. 使用 WebsiteScraper 处理内容
-    scraper = WebsiteScraper(
-        base_url="https://unityassets4free.com/",
-        disable_ssl_verification=disable_ssl_verification
-    )
+    # 3. 使用 Assets4FreeCrawler 处理内容
+    scraper = Assets4FreeCrawler(max_workers=1, delay=1)
 
     # 配置请求会话（添加自定义 TLS 支持）
     session = scraper.session
@@ -163,4 +160,4 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
 if __name__ == "__main__":
     # 示例用法
     target_directory = r"F:\0游戏教程\0tele"  # 替换为实际目录
-    process_assets(target_directory, file_indices=[3], disable_ssl_verification=True)  # 处理多个文件
+    process_assets(target_directory, file_indices=[6], disable_ssl_verification=True)  # 处理多个文件
