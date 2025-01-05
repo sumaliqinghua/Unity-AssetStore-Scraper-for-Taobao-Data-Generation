@@ -2,6 +2,7 @@ import os
 from handlefilename import clean_file_names
 from googleserach import google_search
 from assets4free_crawler import Assets4FreeCrawler
+from taobao_crawler import TaoBaoCrawler
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from urllib3.util.ssl_ import create_urllib3_context
@@ -23,6 +24,25 @@ class TLSAdapter(HTTPAdapter):
         super().__init__(**kwargs)
 
 
+def get_crawler_instance(crawler_type=None, max_workers=3, delay=1, disable_ssl_verification=False):
+    """
+    获取爬虫实例
+    :param crawler_type: 爬虫类型，可以是 'assets4free' 或 'taobao'
+    :return: 爬虫实例
+    """
+    if crawler_type is None:
+        print("\n选择爬虫类型：")
+        print("1. Assets4Free爬虫")
+        print("2. 淘宝爬虫")
+        choice = input("请选择爬虫类型 (1/2): ").strip()
+        crawler_type = 'assets4free' if choice == '1' else 'taobao'
+    
+    if crawler_type == 'assets4free':
+        return Assets4FreeCrawler(max_workers=max_workers, delay=delay)
+    else:
+        return TaoBaoCrawler(max_workers=max_workers, delay=delay)
+
+
 def process_single_asset(directory, file_info, disable_ssl_verification=False):
     """
     处理单个资源文件
@@ -33,75 +53,77 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
     print(f"处理文件: {file_info['original_name']}")
     print(f"清理后的名称: {file_info['cleaned_name']}")
 
-    # website = "site:assetstore.unity.com "
-    website = "site:unityassets4free.com "
+    # 选择搜索网站
+    print("\n选择搜索网站：")
+    print("1. Unity Asset Store")
+    print("2. Unity Assets 4 Free")
+    site_choice = input("请选择搜索网站 (1/2): ").strip()
+    website = "site:assetstore.unity.com " if site_choice == '1' else "site:unityassets4free.com "
+
     # 1. 使用 Google 搜索获取标题和链接
     while True:
         search_query = f"{website}{file_info['cleaned_name']}"
         search_query = search_query.replace("_", " ")
-        search_result = google_search(search_query)
+        search_results = google_search(search_query)
 
-        if not search_result:
+        if not search_results:
             print(f"未找到相关搜索结果 {search_query}")
             user_input = input("请输入新的搜索词（直接回车退出）: ")
             if not user_input:
                 return False
             file_info['cleaned_name'] = user_input
             continue
-        break
 
-    print(f"找到资源: {search_result['title']}")
-    print(f"资源链接: {search_result['link']}")
-
-    # 3. 使用 Assets4FreeCrawler 处理内容
-    scraper = Assets4FreeCrawler(max_workers=1, delay=1)
-
-    # 配置请求会话（添加自定义 TLS 支持）
-    session = scraper.session
-    retries = Retry(total=5, backoff_factor=0.3, status_forcelist=[500, 502, 503, 504])
-    adapter = TLSAdapter()
-    session.mount("https://", adapter)
-    session.mount("http://", adapter)
-
-    # 配置 Clash 代理
-    proxies = {
-        "http": "http://127.0.0.1:2612",  # Clash 默认 HTTP 代理端口
-        "https": "http://127.0.0.1:2612",  # Clash 默认 HTTPS 代理端口
-    }
-
-    try:
-        # 获取网页内容
-        html_content = scraper.get_page_content(search_result['link'], timeout=30)
-
-        # 解析文章内容，使用 Google 搜索结果的标题
-        article_data = scraper.parse_article(
-            html_content,
-            search_result['link'],
-            custom_title=search_result['title'],
-            file_path=file_info['full_path']  # 确保传入文件路径
-        )
-
-        if not article_data:
-            print("解析文章失败")
+        # 显示搜索结果并让用户确认
+        print("\n搜索结果：")
+        for i, result in enumerate(search_results, 1):
+            print(f"{i}. 标题: {result['title']}")
+            print(f"   链接: {result['link']}\n")
+        
+        choice = input("请选择要使用的结果编号（输入数字），输入n重新搜索，直接回车退出：").strip()
+        if not choice:
             return False
+        if choice.lower() == 'n':
+            user_input = input("请输入新的搜索词: ")
+            if user_input:
+                file_info['cleaned_name'] = user_input
+                continue
+            return False
+        
+        try:
+            selected_index = int(choice) - 1
+            if 0 <= selected_index < len(search_results):
+                selected_result = search_results[selected_index]
+                break
+            else:
+                print("无效的选择，请重试")
+                continue
+        except ValueError:
+            print("无效的输入，请重试")
+            continue
 
-        # 确保article_data包含file_path
-        if 'file_path' not in article_data:
-            article_data['file_path'] = file_info['full_path']
-
-        # 保存文章内容
-        if scraper.save_article(article_data):
-            print("成功保存文章内容")
+    # 2. 获取爬虫实例并抓取页面
+    crawler = get_crawler_instance()
+    
+    try:
+        # 3. 下载并解析页面
+        response = crawler.session.get(selected_result['link'], verify=not disable_ssl_verification)
+        response.raise_for_status()
+        
+        # 4. 解析页面内容
+        parsed_content = crawler.parse_article(response.text, selected_result['link'])
+        
+        if parsed_content:
+            print("成功获取页面内容")
             return True
         else:
-            print("保存文章失败")
+            print("无法解析页面内容")
             return False
-    except SSLError as e:
-        print(f"SSL 错误: {e}")
-        return False
+            
     except Exception as e:
-        print(f"请求时发生错误: {e}")
+        print(f"处理过程中出错: {str(e)}")
         return False
+
 
 def process_assets(directory, file_indices=None, disable_ssl_verification=False):
     """
@@ -156,6 +178,7 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
     for result in results:
         status = "成功" if result['success'] else "失败"
         print(f"文件 {result['file']} (索引 {result['index']}): {status}")
+
 
 if __name__ == "__main__":
     # 示例用法
