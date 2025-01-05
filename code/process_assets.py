@@ -36,12 +36,19 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
     # website = "site:assetstore.unity.com "
     website = "site:unityassets4free.com "
     # 1. 使用 Google 搜索获取标题和链接
-    search_query = f"{website}{file_info['cleaned_name']}"
-    search_result = google_search(search_query)
+    while True:
+        search_query = f"{website}{file_info['cleaned_name']}"
+        search_query = search_query.replace("_", " ")
+        search_result = google_search(search_query)
 
-    if not search_result:
-        print("未找到相关搜索结果")
-        return False
+        if not search_result:
+            print(f"未找到相关搜索结果 {file_info['cleaned_name']}")
+            user_input = input("请输入新的搜索词（直接回车退出）: ")
+            if not user_input:
+                return False
+            file_info['cleaned_name'] = user_input
+            continue
+        break
 
     print(f"找到资源: {search_result['title']}")
     print(f"资源链接: {search_result['link']}")
@@ -156,4 +163,4 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
 if __name__ == "__main__":
     # 示例用法
     target_directory = r"F:\0游戏教程\0tele"  # 替换为实际目录
-    process_assets(target_directory, file_indices=[4], disable_ssl_verification=True)  # 处理多个文件
+    process_assets(target_directory, file_indices=[3], disable_ssl_verification=True)  # 处理多个文件
