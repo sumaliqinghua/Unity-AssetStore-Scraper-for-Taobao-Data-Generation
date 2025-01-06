@@ -4,9 +4,11 @@ from bs4 import BeautifulSoup
 class TaoBaoCrawler(BaseCrawler):
     def __init__(self, max_workers=3, delay=1):
         super().__init__(
-            base_url="",  # 这里可以根据需要设置基础URL
+            base_url="https://www.assetstore.unity.com/",  # 设置一个基础URL
             max_workers=max_workers,
-            delay=delay
+            delay=delay,
+            use_proxy=True,  # 使用代理
+            disable_ssl_verification=True  # 禁用SSL验证
         )
 
     def parse_article(self, html_content, url, custom_title=None, file_path=None):
@@ -39,10 +41,7 @@ class TaoBaoCrawler(BaseCrawler):
 
     def extract_description_text(self, html_content):
         """
-        Extract text from three specific divs with class '_1_3uP _1rkJa' based on their structure:
-        1. First div directly under _3MR2i
-        2. Second div under _3lKf4 show -> _1RlcV
-        3. Third div under _3lKf4 (without show) -> _1RlcV
+        Extract text from description divs based on their structure
         
         Args:
             html_content: HTML content as string
@@ -52,26 +51,17 @@ class TaoBaoCrawler(BaseCrawler):
         soup = BeautifulSoup(html_content, 'html.parser')
         texts = []
         
-        # 1. First div - directly under _3MR2i
-        main_div = soup.find('div', class_='_3MR2i')
-        if main_div:
-            first_desc = main_div.find('div', class_='_1_3uP _1rkJa')
-            if first_desc:
-                texts.append(first_desc.get_text(strip=True))
+        # First description in _3MR2i
+        first_desc = soup.find('div', class_='_3MR2i').find('div', class_='_1_3uP _1rkJa')
+        if first_desc:
+            texts.append(first_desc.get_text(strip=True))
         
-        # 2. Second div - under _3lKf4 show
-        show_div = soup.find('div', class_='_3lKf4 show')
-        if show_div:
-            content_div = show_div.find('div', class_='_1RlcV')
-            if content_div:
-                desc = content_div.find('div', class_='_1_3uP _1rkJa')
-                if desc:
-                    texts.append(desc.get_text(strip=True))
+        # Find all _3lKf4 divs (they contain the other descriptions)
+        description_containers = soup.find_all('div', class_='_3lKf4')
         
-        # 3. Third div - under _3lKf4 (without show)
-        tech_div = soup.find('div', {'class': '_3lKf4', 'style': lambda value: value and 'show' not in value})
-        if tech_div:
-            content_div = tech_div.find('div', class_='_1RlcV')
+        for container in description_containers:
+            # Look for _1RlcV div inside each container
+            content_div = container.find('div', class_='_1RlcV')
             if content_div:
                 desc = content_div.find('div', class_='_1_3uP _1rkJa')
                 if desc:

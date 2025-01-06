@@ -59,6 +59,7 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
     print("2. Unity Assets 4 Free")
     site_choice = input("请选择搜索网站 (1/2): ").strip()
     website = "site:assetstore.unity.com " if site_choice == '1' else "site:unityassets4free.com "
+    crawler_type = 'taobao' if site_choice == '1' else 'assets4free'
 
     # 1. 使用 Google 搜索获取标题和链接
     while True:
@@ -103,7 +104,7 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
             continue
 
     # 2. 获取爬虫实例并抓取页面
-    crawler = get_crawler_instance()
+    crawler = get_crawler_instance(crawler_type=crawler_type)
     
     try:
         # 3. 下载并解析页面
@@ -111,7 +112,9 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
         response.raise_for_status()
         
         # 4. 解析页面内容
-        parsed_content = crawler.parse_article(response.text, selected_result['link'])
+        parsed_content = crawler.parse_article(response.text, selected_result['link'], 
+                                            custom_title=selected_result['title'],
+                                            file_path=file_info['full_path'])
         
         if parsed_content:
             print("成功获取页面内容")

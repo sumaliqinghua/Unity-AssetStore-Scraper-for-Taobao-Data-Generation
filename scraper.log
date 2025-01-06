@@ -29,3 +29,21 @@
 2025-01-02 00:45:28,039 - WARNING - 无法读取robots.txt: <urlopen error [WinError 10053] 你的主机中的软件中止了一个已建立的连接。>
 2025-01-02 00:45:58,160 - INFO - 已下载图片: downloads\2D_RPG_Starter_Kit_-_Complete_Game_Template\thumbnail.webp
 2025-01-02 00:46:00,770 - INFO - 数据已保存到Excel: downloads\assets_data.xlsx
+2025-01-06 01:33:04,662 - WARNING - 直接访问失败，尝试使用代理: HTTPSConnectionPool(host='unityassets4free.com', port=443): Max retries exceeded with url: /ultimate-stampit-collection/ (Caused by SSLError(SSLEOFError(8, 'EOF occurred in violation of protocol (_ssl.c:1129)')))
+2025-01-06 01:34:43,157 - INFO - 已下载图片: downloads\Environment_Archives_-_Page_9_of_131\thumbnail.webp
+2025-01-06 01:34:45,833 - INFO - 数据已保存到Excel: downloads\assets_data.xlsx
+2025-01-06 01:38:12,802 - INFO - 已下载图片: downloads\Fantasy_Spell_Icons_Ultimate_Bundle_-_Page_2_of_2\thumbnail.webp
+2025-01-06 01:38:15,350 - INFO - 数据已保存到Excel: downloads\assets_data.xlsx
+2025-01-06 01:38:15,382 - INFO - 数据已保存到Excel: downloads\assets_data.xlsx
+2025-01-06 01:43:53,819 - WARNING - 无法读取robots.txt: unknown url type: '/robots.txt'
+2025-01-06 01:44:56,812 - WARNING - 无法读取robots.txt: unknown url type: '/robots.txt'
+2025-01-06 01:50:21,395 - WARNING - 直接访问失败，尝试使用代理: 404 Client Error: Not Found for url: https://unityassets4free.com/arcade-racing-game-template/
+2025-01-06 01:50:23,339 - WARNING - 直接访问失败，尝试使用代理: 404 Client Error: Not Found for url: https://unityassets4free.com/cute-town-3d/
+2025-01-06 01:50:26,776 - ERROR - 爬取URL失败 https://unityassets4free.com/arcade-racing-game-template/: 404 Client Error: Not Found for url: https://unityassets4free.com/arcade-racing-game-template/
+2025-01-06 01:50:29,569 - ERROR - 爬取URL失败 https://unityassets4free.com/cute-town-3d/: 404 Client Error: Not Found for url: https://unityassets4free.com/cute-town-3d/
+2025-01-06 01:55:36,735 - WARNING - 无法读取robots.txt: unknown url type: '/robots.txt'
+2025-01-06 02:06:42,285 - WARNING - 无法读取robots.txt: unknown url type: '/robots.txt'
+2025-01-06 02:10:57,418 - WARNING - 无法读取robots.txt: <urlopen error [Errno 2] No such file or directory>
+2025-01-06 02:13:44,964 - ERROR - 找不到描述内容
+2025-01-06 23:49:58,178 - WARNING - 无法读取robots.txt: <urlopen error [Errno 2] No such file or directory>
+2025-01-06 23:51:55,896 - WARNING - 无法读取robots.txt: <urlopen error [Errno 2] No such file or directory>
