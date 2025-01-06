@@ -46,7 +46,7 @@ class TaoBaoCrawler(BaseCrawler):
         Args:
             html_content: HTML content as string
         Returns:
-            str: Concatenated text from the divs, separated by newlines
+            str: Concatenated text from the divs with proper formatting
         """
         soup = BeautifulSoup(html_content, 'html.parser')
         texts = []
@@ -54,7 +54,8 @@ class TaoBaoCrawler(BaseCrawler):
         # First description in _3MR2i
         first_desc = soup.find('div', class_='_3MR2i').find('div', class_='_1_3uP _1rkJa')
         if first_desc:
-            texts.append(first_desc.get_text(strip=True))
+            text = ' '.join(line.strip() for line in first_desc.get_text().splitlines() if line.strip())
+            texts.append(text)
         
         # Find all _3lKf4 divs (they contain the other descriptions)
         description_containers = soup.find_all('div', class_='_3lKf4')
@@ -65,9 +66,20 @@ class TaoBaoCrawler(BaseCrawler):
             if content_div:
                 desc = content_div.find('div', class_='_1_3uP _1rkJa')
                 if desc:
-                    texts.append(desc.get_text(strip=True))
+                    # Process each paragraph separately
+                    paragraphs = desc.find_all('p')
+                    if paragraphs:
+                        for p in paragraphs:
+                            text = ' '.join(line.strip() for line in p.get_text().splitlines() if line.strip())
+                            if text:
+                                texts.append(text)
+                    else:
+                        # If no paragraphs, process the whole text
+                        text = ' '.join(line.strip() for line in desc.get_text().splitlines() if line.strip())
+                        if text:
+                            texts.append(text)
         
-        return '\n'.join(texts)
+        return '\n\n'.join(texts)
 
 # 使用示例
 if __name__ == "__main__":
