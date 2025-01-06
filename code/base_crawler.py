@@ -13,7 +13,7 @@ from translate import Translator
 import pandas as pd
 
 class BaseCrawler:
-    def __init__(self, base_url, max_workers=3, delay=1, disable_ssl_verification=False, use_proxy=False):
+    def __init__(self, base_url, max_workers=3, delay=1, disable_ssl_verification=False, use_proxy=False, proxy_url=None):
         self.base_url = base_url
         self.max_workers = max_workers
         self.delay = delay
@@ -24,10 +24,16 @@ class BaseCrawler:
         
         # 配置代理
         if use_proxy:
-            self.session.proxies = {
-                "http": "http://127.0.0.1:2612",
-                "https": "http://127.0.0.1:2612",
-            }
+            if proxy_url:
+                self.session.proxies = {
+                    "http": proxy_url,
+                    "https": proxy_url,
+                }
+            else:
+                self.logger.error("代理地址未配置")
+                raise ValueError("代理地址未配置")
+        else:
+            self.session.proxies = {}  # 确保完全禁用代理
         
         # 配置SSL验证
         self.session.verify = not disable_ssl_verification

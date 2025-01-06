@@ -49,3 +49,22 @@
 2025-01-06 23:51:55,896 - WARNING - 无法读取robots.txt: <urlopen error [Errno 2] No such file or directory>
 2025-01-07 00:05:02,708 - WARNING - 无法读取robots.txt: <urlopen error [Errno 2] No such file or directory>
 2025-01-07 00:05:48,595 - WARNING - 无法读取robots.txt: <urlopen error [Errno 2] No such file or directory>
+2025-01-07 01:54:11,206 - WARNING - 直接访问失败，尝试使用代理: HTTPSConnectionPool(host='assetstore.unity.com', port=443): Max retries exceeded with url: /packages/2d/environments/2d-rpg-topdown-tilesets-pixelart-assets-full-bundle-212921?srsltid=AfmBOoq8TNtGTyNgIzhkw30EOjhIn2ABvKE7WQ2XNX4TtgP-x_B22C6t (Caused by ProxyError('Cannot connect to proxy.', FileNotFoundError(2, 'No such file or directory')))
+2025-01-07 01:54:11,252 - ERROR - 爬取URL失败 https://assetstore.unity.com/packages/2d/environments/2d-rpg-topdown-tilesets-pixelart-assets-full-bundle-212921?srsltid=AfmBOoq8TNtGTyNgIzhkw30EOjhIn2ABvKE7WQ2XNX4TtgP-x_B22C6t: HTTPSConnectionPool(host='assetstore.unity.com', port=443): Max retries exceeded with url: /packages/2d/environments/2d-rpg-topdown-tilesets-pixelart-assets-full-bundle-212921?srsltid=AfmBOoq8TNtGTyNgIzhkw30EOjhIn2ABvKE7WQ2XNX4TtgP-x_B22C6t (Caused by ProxyError('Cannot connect to proxy.', FileNotFoundError(2, 'No such file or directory')))
+2025-01-07 01:54:52,926 - WARNING - 未找到任何描述内容
+2025-01-07 01:55:42,026 - INFO - 开始爬取URL: https://assetstore.unity.com/packages/2d/environments/2d-rpg-topdown-tilesets-pixelart-assets-full-bundle-212921?srsltid=AfmBOoq8TNtGTyNgIzhkw30EOjhIn2ABvKE7WQ2XNX4TtgP-x_B22C6t
+2025-01-07 01:55:43,227 - INFO - 成功获取页面内容，开始解析...
+2025-01-07 01:55:43,227 - INFO - HTML内容长度: 284672
+2025-01-07 01:55:43,247 - INFO - 页面标题: 2D RPG topdown tilesets - pixelart assets FULL BUNDLE | 2D Environments | Unity Asset Store
+2025-01-07 01:55:43,250 - WARNING - 未找到description-section区域
+2025-01-07 01:55:43,251 - INFO - 尝试查找其他描述区域...
+2025-01-07 01:55:43,255 - INFO - 找到 0 个可能的描述区域
+2025-01-07 01:55:43,256 - WARNING - 未找到任何描述内容，已保存HTML到debug_html.txt
+2025-01-07 01:55:43,256 - WARNING - 解析文章内容为空
+2025-01-07 01:56:45,430 - INFO - 开始爬取URL: https://assetstore.unity.com/packages/2d/environments/2d-rpg-topdown-tilesets-pixelart-assets-full-bundle-212921?srsltid=AfmBOoq8TNtGTyNgIzhkw30EOjhIn2ABvKE7WQ2XNX4TtgP-x_B22C6t
+2025-01-07 01:56:46,692 - INFO - 成功获取页面内容，开始解析...
+2025-01-07 01:56:46,692 - INFO - HTML内容长度: 284669
+2025-01-07 01:56:46,712 - INFO - 页面标题: 2D RPG topdown tilesets - pixelart assets FULL BUNDLE | 2D Environments | Unity Asset Store
+2025-01-07 01:56:46,713 - INFO - 找到meta description
+2025-01-07 01:56:46,714 - INFO - 从JSON-LD中找到描述
+2025-01-07 01:56:49,903 - INFO - 成功解析文章内容
