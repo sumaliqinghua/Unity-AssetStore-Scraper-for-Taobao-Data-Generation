@@ -6,6 +6,8 @@ import time
 import requests
 import json
 import re
+import pandas as pd
+from datetime import datetime
 
 class TaoBaoCrawler(BaseCrawler):
     def __init__(self, max_workers=3, delay=1):
@@ -16,6 +18,7 @@ class TaoBaoCrawler(BaseCrawler):
             use_proxy=False,  # 禁用代理
             disable_ssl_verification=True  # 禁用SSL验证
         )
+        self.results = []
 
     def parse_article(self, html_content, url, custom_title=None, file_path=None):
         """
@@ -144,8 +147,12 @@ class TaoBaoCrawler(BaseCrawler):
                     except Exception as e:
                         self.logger.debug(f"解析脚本中的图片数组时出错: {str(e)}")
             
-            # 5. 处理找到的所有图片URL
+            # 5. 处理找到的所有图片URL（限制最多7张）
+            downloaded_count = 0
             for img_url in image_urls:
+                if downloaded_count >= 7:
+                    break
+                    
                 # 确保获取最大尺寸的图片
                 img_url = img_url.replace('_50x50.jpg', '.jpg')\
                                .replace('_60x60.jpg', '.jpg')\
@@ -158,6 +165,7 @@ class TaoBaoCrawler(BaseCrawler):
                 if img_path:
                     images.append(img_path)
                     self.logger.info(f'成功下载图片: {img_path}')
+                    downloaded_count += 1
             
             return {
                 'title': title,
@@ -322,6 +330,46 @@ class TaoBaoCrawler(BaseCrawler):
         except Exception as e:
             self.logger.error(f'下载图片时出错: {e}')
             return None
+
+    def save_to_excel(self):
+        """保存结果到Excel文件"""
+        if not self.results:
+            self.logger.warning("没有数据可以保存")
+            return
+
+        # 创建输出目录
+        output_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'output')
+        os.makedirs(output_dir, exist_ok=True)
+
+        # 生成Excel文件名
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        excel_file = os.path.join(output_dir, f'unity_assets_{timestamp}.xlsx')
+
+        # 转换数据为DataFrame
+        df = pd.DataFrame(self.results)
+        
+        # 重命名列
+        columns = {
+            'title': '标题',
+            'url': '链接',
+            'content': '描述',
+            'translated_content': '翻译后的描述',
+            'file_path': '文件路径',
+            'file_name': '文件名',
+            'image_paths': '图片路径'
+        }
+        df = df.rename(columns=columns)
+
+        # 保存到Excel
+        df.to_excel(excel_file, index=False, engine='openpyxl')
+        self.logger.info(f"数据已保存到: {excel_file}")
+
+    def crawl_urls(self, urls):
+        """爬取多个URL"""
+        results = super().crawl_urls(urls)
+        self.results.extend(results)
+        self.save_to_excel()
+        return results
 
 # 使用示例
 if __name__ == "__main__":
