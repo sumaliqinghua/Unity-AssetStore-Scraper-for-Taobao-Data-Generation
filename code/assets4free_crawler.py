@@ -129,7 +129,7 @@ class Assets4FreeCrawler(BaseCrawler):
             
             return {
                 'title': title,
-                'url': selected_result['link'] if 'selected_result' in locals() else url,  # 使用搜索结果的链接
+                'url': url,  # 使用传入的URL
                 'content': description,
                 'translated_content': translated_description,
                 'file_path': file_path,

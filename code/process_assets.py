@@ -233,6 +233,8 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
                                                             file_path=file_info['full_path'])
                         
                         if parsed_content:
+                            # 确保使用爬虫的原链接
+                            parsed_content['url'] = selected_result['link']
                             print("成功获取页面内容")
                             results.append(parsed_content)
                         else:
