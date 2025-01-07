@@ -68,3 +68,66 @@
 2025-01-07 01:56:46,713 - INFO - 找到meta description
 2025-01-07 01:56:46,714 - INFO - 从JSON-LD中找到描述
 2025-01-07 01:56:49,903 - INFO - 成功解析文章内容
+2025-01-07 22:26:28,607 - INFO - 开始爬取URL: https://assetstore.unity.com/packages/3d/environments/landscapes/terrain-sample-asset-pack-145808
+2025-01-07 22:26:30,169 - INFO - 成功获取页面内容，开始解析...
+2025-01-07 22:26:35,229 - INFO - 成功解析文章内容
+2025-01-07 22:28:17,689 - INFO - 开始爬取URL: https://assetstore.unity.com/packages/3d/environments/landscapes/terrain-sample-asset-pack-145808
+2025-01-07 22:28:23,851 - INFO - 成功获取页面内容，开始解析...
+2025-01-07 22:28:23,854 - INFO - 已保存HTML内容到: e:\Proj\AI\taobao\debug\page_1736260103.html
+2025-01-07 22:28:27,106 - INFO - 成功解析文章内容
+2025-01-07 22:28:29,826 - INFO - 已保存HTML内容到: e:\Proj\AI\taobao\debug\page_1736260109.html
+2025-01-07 22:30:21,596 - INFO - 开始爬取URL: https://assetstore.unity.com/packages/3d/environments/landscapes/terrain-sample-asset-pack-145808
+2025-01-07 22:30:23,194 - INFO - 成功获取页面内容，开始解析...
+2025-01-07 22:30:23,198 - INFO - 已保存HTML内容到: e:\Proj\AI\taobao\debug\page_1736260223.html
+2025-01-07 22:30:23,215 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/key-image/1b123a3f-6ec4-4cb4-9905-356aa4188390.jpg?v=1
+2025-01-07 22:30:23,907 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260223_3593.jpg
+2025-01-07 22:30:23,907 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260223_3593.jpg
+2025-01-07 22:30:28,334 - INFO - 成功解析文章内容
+2025-01-07 22:30:31,334 - INFO - 已保存HTML内容到: e:\Proj\AI\taobao\debug\page_1736260231.html
+2025-01-07 22:30:31,350 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/key-image/1b123a3f-6ec4-4cb4-9905-356aa4188390.jpg?v=1
+2025-01-07 22:30:31,558 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260231_3593.jpg
+2025-01-07 22:30:31,558 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260231_3593.jpg
+2025-01-07 22:32:12,037 - INFO - 开始爬取URL: https://assetstore.unity.com/packages/3d/environments/landscapes/terrain-sample-asset-pack-145808
+2025-01-07 22:32:14,204 - INFO - 成功获取页面内容，开始解析...
+2025-01-07 22:32:14,206 - INFO - 已保存HTML内容到: e:\Proj\AI\taobao\debug\page_1736260334.html
+2025-01-07 22:32:14,230 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/37879d34-9ca6-43c1-b850-976b9e5d4591_scaled.jpg
+2025-01-07 22:32:15,079 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260334_1824.jpg
+2025-01-07 22:32:15,079 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260334_1824.jpg
+2025-01-07 22:32:15,079 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/key-image/b6af7f29-4c25-42b7-a526-49b8f42d7e1b.jpg
+2025-01-07 22:32:15,268 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260335_4866.jpg
+2025-01-07 22:32:15,268 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260335_4866.jpg
+2025-01-07 22:32:15,268 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/b27cefa6-8196-4071-a4e6-d6e320e3f711_scaled.jpg
+2025-01-07 22:32:15,395 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260335_5890.jpg
+2025-01-07 22:32:15,396 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260335_5890.jpg
+2025-01-07 22:32:15,396 - INFO - 尝试下载图片: https:jpg
+2025-01-07 22:32:16,091 - WARNING - 下载图片失败: https://assetstore.unity.com/jpg
+2025-01-07 22:32:16,093 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/ed23b44f-83b9-47c4-ace2-cb6bc6b58530.jpg
+2025-01-07 22:32:16,903 - WARNING - 下载图片失败: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/ed23b44f-83b9-47c4-ace2-cb6bc6b58530.jpg
+2025-01-07 22:32:16,905 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/b27cefa6-8196-4071-a4e6-d6e320e3f711.jpg
+2025-01-07 22:32:18,604 - WARNING - 下载图片失败: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/b27cefa6-8196-4071-a4e6-d6e320e3f711.jpg
+2025-01-07 22:32:18,605 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/ed23b44f-83b9-47c4-ace2-cb6bc6b58530_scaled.jpg
+2025-01-07 22:32:20,021 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260338_9177.jpg
+2025-01-07 22:32:20,022 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260338_9177.jpg
+2025-01-07 22:32:20,023 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/96c37540-4eaf-4c6a-a8ad-a89fd5f0912f.jpg
+2025-01-07 22:32:20,969 - WARNING - 下载图片失败: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/96c37540-4eaf-4c6a-a8ad-a89fd5f0912f.jpg
+2025-01-07 22:32:20,972 - INFO - 尝试下载图片: https:png
+2025-01-07 22:32:21,948 - WARNING - 下载图片失败: https://assetstore.unity.com/png
+2025-01-07 22:32:21,950 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/ba54406e-5b3b-4859-9c9f-79de41ecbe5c_scaled.jpg
+2025-01-07 22:32:22,700 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260341_6119.jpg
+2025-01-07 22:32:22,701 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260341_6119.jpg
+2025-01-07 22:32:22,701 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/ba54406e-5b3b-4859-9c9f-79de41ecbe5c.jpg
+2025-01-07 22:32:23,460 - WARNING - 下载图片失败: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/ba54406e-5b3b-4859-9c9f-79de41ecbe5c.jpg
+2025-01-07 22:32:23,461 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/key-image/1b123a3f-6ec4-4cb4-9905-356aa4188390.jpg?v=1
+2025-01-07 22:32:24,642 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260343_6954.jpg
+2025-01-07 22:32:24,642 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260343_6954.jpg
+2025-01-07 22:32:24,642 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/9a6f67fa-0510-41b6-ac98-7682d117d211_thumb.png
+2025-01-07 22:32:24,925 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260344_9068.png
+2025-01-07 22:32:24,925 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260344_9068.png
+2025-01-07 22:32:24,926 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/96c37540-4eaf-4c6a-a8ad-a89fd5f0912f_scaled.jpg
+2025-01-07 22:32:25,468 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260344_8717.jpg
+2025-01-07 22:32:25,469 - INFO - 成功下载图片: downloads\Terrain_Sample_Asset_Pack___3D_Landscapes___Unity_Asset_Store\image_1736260344_8717.jpg
+2025-01-07 22:32:25,469 - INFO - 尝试下载图片: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/37879d34-9ca6-43c1-b850-976b9e5d4591.jpg
+2025-01-07 22:32:26,322 - WARNING - 下载图片失败: https://assetstorev1-prd-cdn.unity3d.com/package-screenshot/37879d34-9ca6-43c1-b850-976b9e5d4591.jpg
+2025-01-07 22:32:31,268 - INFO - 成功解析文章内容
+2025-01-07 22:32:32,280 - ERROR - 获取页面内容失败: Invalid URL '//assetstorev1-prd-cdn.unity3d.com/package-screenshot/9a6f67fa-0510-41b6-ac98-7682d117d211_thumb.png': No scheme supplied. Perhaps you meant https:////assetstorev1-prd-cdn.unity3d.com/package-screenshot/9a6f67fa-0510-41b6-ac98-7682d117d211_thumb.png?
+2025-01-07 22:32:32,282 - ERROR - 解析文章失败: write() argument must be str, not None

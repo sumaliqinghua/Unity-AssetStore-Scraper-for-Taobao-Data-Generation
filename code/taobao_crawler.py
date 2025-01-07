@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 import time
 import requests
 import json
+import re
 
 class TaoBaoCrawler(BaseCrawler):
     def __init__(self, max_workers=3, delay=1):
@@ -28,16 +29,144 @@ class TaoBaoCrawler(BaseCrawler):
             dict: 包含解析后的内容
         """
         try:
-            description = self.extract_description_text(html_content)
+            # 保存HTML内容到文件
+            debug_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'debug')
+            os.makedirs(debug_dir, exist_ok=True)
+            debug_file = os.path.join(debug_dir, f'page_{int(time.time())}.html')
+            with open(debug_file, 'w', encoding='utf-8') as f:
+                f.write(f"<!-- Original URL: {url} -->\n")
+                f.write(html_content)
+            self.logger.info(f"已保存HTML内容到: {debug_file}")
+
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+            # 获取标题
+            title = custom_title
+            if not title:
+                meta_title = soup.find('meta', property='og:title')
+                if meta_title:
+                    title = meta_title.get('content', '未命名')
+                else:
+                    title_tag = soup.find('title')
+                    title = title_tag.text if title_tag else '未命名'
+            
+            # 获取描述
+            description = None
+            meta_desc = soup.find('meta', property='og:description')
+            if meta_desc:
+                description = meta_desc.get('content')
+            if not description:
+                meta_desc = soup.find('meta', {'name': 'description'})
+                if meta_desc:
+                    description = meta_desc.get('content')
+            
+            if not description:
+                description = self.extract_description_text(html_content)
+                
             if not description:
                 return None
+            
+            # 生成文件名 - 移除所有非法字符
+            file_name = title.replace(' ', '_')
+            # 移除Windows文件名中的非法字符 \ / : * ? " < > |
+            file_name = re.sub(r'[\\/:*?"<>|]', '_', file_name)
+            # 确保文件名不超过255个字符
+            if len(file_name) > 255:
+                file_name = file_name[:255]
+            
+            # 创建文章目录
+            save_dir = self.create_article_directory(file_name)
+            
+            # 提取并下载图片
+            images = []
+            
+            # 2. 查找轮播图片
+            # Unity Asset Store的图片通常存储在特定的CDN上
+            cdn_pattern = re.compile(r'(?:https?:)?//assetstorev1-prd-cdn\.unity3d\.com/.*?\.(jpg|png|jpeg|gif)(\?v=\d+)?')
+            
+            # 1. 从页面数据中查找图片URL
+            image_urls = set()  # 使用set去重
+            
+            # 2. 从JSON-LD数据中提取图片
+            json_ld_pattern = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.DOTALL)
+            json_matches = json_ld_pattern.findall(html_content)
+            
+            for json_str in json_matches:
+                try:
+                    data = json.loads(json_str)
+                    if isinstance(data, dict):
+                        # 检查image字段
+                        if 'image' in data:
+                            if isinstance(data['image'], list):
+                                for img in data['image']:
+                                    if isinstance(img, str):
+                                        img_url = img if img.startswith('http') else f'https:{img}'
+                                        if cdn_pattern.search(img_url):
+                                            image_urls.add(img_url)
+                            elif isinstance(data['image'], str):
+                                img_url = data['image'] if data['image'].startswith('http') else f'https:{data["image"]}'
+                                if cdn_pattern.search(img_url):
+                                    image_urls.add(img_url)
+                except Exception as e:
+                    self.logger.warning(f"解析JSON-LD数据时出错: {str(e)}")
+            
+            # 3. 从meta标签中提取图片
+            meta_images = soup.find_all('meta', {'property': ['og:image', 'twitter:image']})
+            for meta in meta_images:
+                img_url = meta.get('content')
+                if img_url:
+                    img_url = img_url if img_url.startswith('http') else f'https:{img_url}'
+                    if cdn_pattern.search(img_url):
+                        image_urls.add(img_url)
+            
+            # 4. 查找所有script标签中的图片URL
+            scripts = soup.find_all('script')
+            for script in scripts:
+                if script.string:
+                    # 查找所有可能的图片URL
+                    matches = cdn_pattern.findall(script.string)
+                    for match in matches:
+                        img_url = match[0]  # 完整的URL在第一个分组
+                        img_url = img_url if img_url.startswith('http') else f'https:{img_url}'
+                        image_urls.add(img_url)
+                    
+                    # 尝试解析JavaScript对象
+                    try:
+                        # 查找类似 "images": ["url1", "url2"] 的模式
+                        img_arrays = re.findall(r'"(?:images|screenshots|gallery)":\s*\[(.*?)\]', script.string)
+                        for img_array in img_arrays:
+                            # 提取数组中的URL
+                            url_matches = re.findall(r'"((?:https?:)?//[^"]+\.(?:jpg|png|jpeg|gif)[^"]*)"', img_array)
+                            for url in url_matches:
+                                img_url = url if url.startswith('http') else f'https:{url}'
+                                if cdn_pattern.search(img_url):
+                                    image_urls.add(img_url)
+                    except Exception as e:
+                        self.logger.debug(f"解析脚本中的图片数组时出错: {str(e)}")
+            
+            # 5. 处理找到的所有图片URL
+            for img_url in image_urls:
+                # 确保获取最大尺寸的图片
+                img_url = img_url.replace('_50x50.jpg', '.jpg')\
+                               .replace('_60x60.jpg', '.jpg')\
+                               .replace('_100x100.jpg', '.jpg')\
+                               .replace('_thumb.jpg', '.jpg')\
+                               .replace('_preview.jpg', '.jpg')
                 
+                self.logger.info(f'尝试下载图片: {img_url}')
+                img_path = self.download_image(img_url, save_dir)
+                if img_path:
+                    images.append(img_path)
+                    self.logger.info(f'成功下载图片: {img_path}')
+            
             return {
-                'title': custom_title or "未命名",
+                'title': title,
                 'url': url,
                 'content': description,
                 'translated_content': self.translate_text(description),
-                'file_path': file_path
+                'file_path': file_path,
+                'file_name': file_name,
+                'image_paths': images
             }
             
         except Exception as e:
@@ -84,7 +213,7 @@ class TaoBaoCrawler(BaseCrawler):
                             self.logger.info("从JSON-LD中找到描述")
                             texts.append(f"详细描述: {json_data['description']}")
                 except Exception as e:
-                    self.logger.warning(f"解析JSON-LD时出错: {e}")
+                    self.logger.warning(f"解析JSON-LD数据时出错: {e}")
             
             # 查找所有可能包含描述的div
             description_divs = soup.find_all(['div', 'p'], class_=lambda x: x and any(keyword in str(x).lower() for keyword in ['description', 'content', 'detail', 'info']))
@@ -146,99 +275,79 @@ class TaoBaoCrawler(BaseCrawler):
             self.logger.error(f"获取页面内容失败: {e}")
             return None
 
-    def download_image(self, html_content, save_dir='images'):
+    def download_image(self, url, save_dir='images'):
         """
-        从HTML内容中下载图片，最多下载5张
+        下载单个图片
         Args:
-            html_content: HTML内容
+            url: 图片URL
             save_dir: 保存目录
         Returns:
-            list: 下载的图片路径列表
+            str: 下载的图片路径，如果失败则返回None
         """
         try:
-            soup = BeautifulSoup(html_content, 'html.parser')
-            downloaded_images = []
-            
             # 确保保存目录存在
             os.makedirs(save_dir, exist_ok=True)
             
-            # 查找所有带background-image样式的元素
-            elements_with_bg = soup.find_all(lambda tag: tag.get('style') and 'background-image' in tag.get('style'))
+            # 处理URL
+            url = url.strip()
+            if not url.startswith(('http://', 'https://')):
+                if url.startswith('//'):
+                    url = 'https:' + url
+                else:
+                    url = urljoin(self.base_url, url)
+        
+            try:
+                # 生成文件名
+                file_ext = os.path.splitext(url.split('?')[0])[1] or '.jpg'
+                file_name = f'image_{int(time.time())}_{hash(url) % 10000}{file_ext}'
+                save_path = os.path.join(save_dir, file_name)
             
-            # 查找所有img标签
-            img_tags = soup.find_all('img')
-            
-            # 提取所有图片URL
-            image_urls = []
-            
-            # 从background-image中提取URL
-            for element in elements_with_bg:
-                style = element.get('style', '')
-                if 'url(' in style:
-                    url = style.split('url(')[1].split(')')[0].strip('"\'&quot;')
-                    if url:
-                        image_urls.append(url)
-            
-            # 从img标签中提取URL
-            for img in img_tags:
-                url = img.get('src')
-                if url:
-                    image_urls.append(url)
-            
-            # 限制最多下载5张图片
-            for i, url in enumerate(image_urls[:5]):
-                # 处理URL
-                url = url.strip()
-                if not url.startswith(('http://', 'https://')):
-                    if url.startswith('//'):
-                        url = 'https:' + url
-                    else:
-                        url = urljoin(self.base_url, url)
-                
-                try:
-                    # 生成文件名
-                    file_ext = os.path.splitext(url.split('?')[0])[1] or '.jpg'
-                    file_name = f'image_{i+1}{file_ext}'
-                    save_path = os.path.join(save_dir, file_name)
+                # 下载图片
+                response = self.session.get(url, stream=True)
+                if response.status_code == 200:
+                    with open(save_path, 'wb') as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                f.write(chunk)
+                    self.logger.info(f'成功下载图片: {save_path}')
+                    return save_path
+                else:
+                    self.logger.warning(f'下载图片失败: {url}')
+                    return None
                     
-                    # 下载图片
-                    response = self.session.get(url, stream=True)
-                    if response.status_code == 200:
-                        with open(save_path, 'wb') as f:
-                            for chunk in response.iter_content(chunk_size=8192):
-                                if chunk:
-                                    f.write(chunk)
-                        downloaded_images.append(save_path)
-                        self.logger.info(f'成功下载图片: {save_path}')
-                    else:
-                        self.logger.warning(f'下载图片失败: {url}')
-                except Exception as e:
-                    self.logger.error(f'下载图片出错: {url} - {str(e)}')
-                    continue
-                
-                # 添加延迟
-                time.sleep(self.delay)
-            
-            return downloaded_images
-            
+            except Exception as e:
+                self.logger.error(f'下载图片出错: {url} - {str(e)}')
+                return None
+        
         except Exception as e:
             self.logger.error(f'下载图片时出错: {e}')
-            return []
+            return None
 
 # 使用示例
 if __name__ == "__main__":
-    crawler = TaoBaoCrawler()
+    # 示例URLs
     urls = [
-        "https://assetstore.unity.com/packages/2d/environments/2d-rpg-topdown-tilesets-pixelart-assets-full-bundle-212921?srsltid=AfmBOoq8TNtGTyNgIzhkw30EOjhIn2ABvKE7WQ2XNX4TtgP-x_B22C6t",
+        "https://assetstore.unity.com/packages/3d/environments/landscapes/terrain-sample-asset-pack-145808",
     ]
+    
+    # 创建爬虫实例 - 禁用代理和SSL验证
+    crawler = TaoBaoCrawler(max_workers=3, delay=1)
+    crawler.session.proxies = {}  # 禁用代理
+    crawler.session.verify = False  # 禁用SSL验证
     
     # 开始爬取
     results = crawler.crawl_urls(urls)
-    print(f"成功爬取 {len(results)} 个页面")
-    # 从文件读取HTML内容
-    # with open('code/a.html', 'r', encoding='utf-8') as f:
-    #     html_content = f.read()
     
-    # # 提取文本
-    # result = crawler.extract_description_text(html_content)
+    # 测试图片下载
+    if results and len(results) > 0:
+        # 获取第一个结果的HTML内容
+        html_content = crawler.get_page_content(results[0]['url'])
+        # 重新解析以测试图片下载
+        article_with_images = crawler.parse_article(html_content, results[0]['url'], results[0]['title'])
+        if article_with_images and 'image_paths' in article_with_images:
+            print(f"\n下载的图片路径:")
+            for img_path in article_with_images['image_paths']:
+                print(f"- {img_path}")
+    
+    print(f"成功爬取 {len(results)} 个页面")
     print(results)
