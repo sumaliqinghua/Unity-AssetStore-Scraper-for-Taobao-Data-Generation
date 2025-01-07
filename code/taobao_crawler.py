@@ -18,7 +18,6 @@ class TaoBaoCrawler(BaseCrawler):
             use_proxy=False,  # 禁用代理
             disable_ssl_verification=True  # 禁用SSL验证
         )
-        self.results = []
 
     def parse_article(self, html_content, url, custom_title=None, file_path=None):
         """
@@ -111,7 +110,7 @@ class TaoBaoCrawler(BaseCrawler):
                                 if cdn_pattern.search(img_url):
                                     image_urls.add(img_url)
                 except Exception as e:
-                    self.logger.warning(f"解析JSON-LD数据时出错: {str(e)}")
+                    self.logger.warning(f"解析JSON-LD数据时出错: {e}")
             
             # 3. 从meta标签中提取图片
             meta_images = soup.find_all('meta', {'property': ['og:image', 'twitter:image']})
@@ -145,7 +144,7 @@ class TaoBaoCrawler(BaseCrawler):
                                 if cdn_pattern.search(img_url):
                                     image_urls.add(img_url)
                     except Exception as e:
-                        self.logger.debug(f"解析脚本中的图片数组时出错: {str(e)}")
+                        self.logger.debug(f"解析脚本中的图片数组时出错: {e}")
             
             # 5. 处理找到的所有图片URL（限制最多7张）
             downloaded_count = 0
@@ -167,18 +166,22 @@ class TaoBaoCrawler(BaseCrawler):
                     self.logger.info(f'成功下载图片: {img_path}')
                     downloaded_count += 1
             
+            # 翻译描述文本
+            translated_description = self.translate_text(description) if description else ""
+            
             return {
                 'title': title,
-                'url': url,
+                'url': selected_result['link'] if 'selected_result' in locals() else url,  # 使用搜索结果的链接
                 'content': description,
-                'translated_content': self.translate_text(description),
+                'translated_content': translated_description,
                 'file_path': file_path,
                 'file_name': file_name,
+                'save_dir': os.path.abspath(save_dir),  # 使用绝对路径
                 'image_paths': images
             }
             
         except Exception as e:
-            self.logger.error(f"解析文章失败: {e}")
+            self.logger.error(f"解析页面时出错: {e}")
             return None
 
     def extract_description_text(self, html_content):
@@ -331,45 +334,9 @@ class TaoBaoCrawler(BaseCrawler):
             self.logger.error(f'下载图片时出错: {e}')
             return None
 
-    def save_to_excel(self):
-        """保存结果到Excel文件"""
-        if not self.results:
-            self.logger.warning("没有数据可以保存")
-            return
-
-        # 创建输出目录
-        output_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'output')
-        os.makedirs(output_dir, exist_ok=True)
-
-        # 生成Excel文件名
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        excel_file = os.path.join(output_dir, f'unity_assets_{timestamp}.xlsx')
-
-        # 转换数据为DataFrame
-        df = pd.DataFrame(self.results)
-        
-        # 重命名列
-        columns = {
-            'title': '标题',
-            'url': '链接',
-            'content': '描述',
-            'translated_content': '翻译后的描述',
-            'file_path': '文件路径',
-            'file_name': '文件名',
-            'image_paths': '图片路径'
-        }
-        df = df.rename(columns=columns)
-
-        # 保存到Excel
-        df.to_excel(excel_file, index=False, engine='openpyxl')
-        self.logger.info(f"数据已保存到: {excel_file}")
-
     def crawl_urls(self, urls):
         """爬取多个URL"""
-        results = super().crawl_urls(urls)
-        self.results.extend(results)
-        self.save_to_excel()
-        return results
+        return super().crawl_urls(urls)
 
 # 使用示例
 if __name__ == "__main__":

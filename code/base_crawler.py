@@ -53,8 +53,11 @@ class BaseCrawler:
         self.logger = logging.getLogger(__name__)
         
         # 创建基础下载目录
-        self.base_download_dir = 'downloads'
+        self.base_download_dir = os.path.abspath('downloads')
         os.makedirs(self.base_download_dir, exist_ok=True)
+        
+        # 初始化结果列表
+        self.results = []
         
         # 检查robots.txt
         self.robots = RobotFileParser()
@@ -98,33 +101,58 @@ class BaseCrawler:
         os.makedirs(full_path, exist_ok=True)
         return full_path
 
-    def save_to_excel(self, data):
-        """保存数据到Excel文件"""
-        excel_path = os.path.join(self.base_download_dir, 'assets_data.xlsx')
-        try:
-            df_row = {
-                'title': data.get('title', ''),
-                'url': data.get('url', ''),
-                'file_path': data.get('file_path', ''),
-                'file_name': data.get('file_name', ''),
-                'original_content': data.get('content', ''),
-                'translated_content': data.get('translated_content', ''),
-                'image_path': data.get('image_path', ''),
-                'save_time': time.strftime('%Y-%m-%d %H:%M:%S')
+    def save_to_excel(self):
+        """保存结果到Excel文件"""
+        if not self.results:
+            self.logger.warning("没有数据可以保存")
+            return
+
+        # 使用固定的Excel文件路径
+        excel_file = os.path.join(self.base_download_dir, 'assets_data.xlsx')
+
+        # 转换数据为DataFrame
+        df_data = []
+        for result in self.results:
+            # 确保save_dir使用绝对路径
+            save_dir = result.get('save_dir', '')
+            if save_dir and not os.path.isabs(save_dir):
+                save_dir = os.path.abspath(save_dir)
+
+            row = {
+                '标题': result.get('title', ''),
+                '链接': result.get('url', ''),
+                '描述': result.get('content', ''),
+                '翻译后的描述': result.get('translated_content', ''),
+                '文件路径': result.get('file_path', ''),
+                '文件名': result.get('file_name', ''),
+                '图片文件夹': save_dir
             }
-            
-            if os.path.exists(excel_path):
-                df_existing = pd.read_excel(excel_path)
-                df_new = pd.DataFrame([df_row])
-                df_combined = pd.concat([df_existing, df_new], ignore_index=True)
+            df_data.append(row)
+
+        # 创建新的DataFrame
+        new_df = pd.DataFrame(df_data)
+
+        try:
+            # 如果文件存在，读取现有数据并追加新数据
+            if os.path.exists(excel_file):
+                existing_df = pd.read_excel(excel_file)
+                # 合并数据，删除重复项（基于URL）
+                combined_df = pd.concat([existing_df, new_df]).drop_duplicates(subset=['链接'], keep='last')
+                combined_df.to_excel(excel_file, index=False, engine='openpyxl')
             else:
-                df_combined = pd.DataFrame([df_row])
+                # 如果文件不存在，直接保存新数据
+                new_df.to_excel(excel_file, index=False, engine='openpyxl')
             
-            df_combined.to_excel(excel_path, index=False)
-            self.logger.info(f"数据已保存到Excel: {excel_path}")
+            self.logger.info(f"数据已保存到: {excel_file}")
         except Exception as e:
-            self.logger.error(f"保存Excel时出错: {e}")
-            raise
+            self.logger.error(f"保存Excel文件时出错: {e}")
+
+    def crawl_urls(self, urls):
+        """爬取多个URL并保存结果"""
+        results = super().crawl_urls(urls) if hasattr(super(), 'crawl_urls') else []
+        self.results.extend(results)
+        self.save_to_excel()
+        return results
 
     def download_image(self, img_url, save_dir):
         """下载图片"""
@@ -177,21 +205,6 @@ class BaseCrawler:
     def parse_article(self, html_content, url):
         """解析文章，这是一个需要被子类重写的基础方法"""
         raise NotImplementedError("子类必须实现parse_article方法")
-
-    def crawl_urls(self, urls):
-        """批量爬取URLs"""
-        results = []
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            future_to_url = {executor.submit(self.crawl_single_url, url): url for url in urls}
-            for future in future_to_url:
-                try:
-                    result = future.result()
-                    if result:
-                        results.append(result)
-                except Exception as e:
-                    self.logger.error(f"处理URL时出错: {e}")
-                time.sleep(self.delay)
-        return results
 
     def crawl_single_url(self, url):
         """爬取单个URL，这是一个需要被子类重写的基础方法"""
