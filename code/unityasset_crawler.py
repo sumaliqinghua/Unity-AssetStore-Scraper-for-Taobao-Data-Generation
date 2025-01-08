@@ -183,78 +183,79 @@ class UnityAssetCrawler(BaseCrawler):
 
     def extract_content_text(self, html_content):
 
-        try:
-            if not html_content:
-                self.logger.error("HTML内容为空")
-                return None
+        return html_content
+        # try:
+        #     if not html_content:
+        #         self.logger.error("HTML内容为空")
+        #         return None
 
-            soup = BeautifulSoup(html_content, 'html.parser')
-            texts = []
+        #     soup = BeautifulSoup(html_content, 'html.parser')
+        #     texts = []
             
-            try:
-                # 使用部分类名匹配
-                first_desc = soup.find('div', class_=lambda x: x and '_3MR2i' in x)
-                if first_desc:
-                    # 同样使用部分类名匹配
-                    desc_content = first_desc.find('div', class_=lambda x: x and '_1_3uP' in x and '_1rkJa' in x)
-                    if desc_content:
-                        text = ' '.join(line.strip() for line in desc_content.get_text().splitlines() if line.strip())
-                        if text:
-                            texts.append(text)
-                            self.logger.info(f"找到主要描述: {text[:100]}...")
-            except Exception as e:
-                self.logger.info(f"处理主要描述容器时出错: {str(e)}")
+        #     try:
+        #         # 使用部分类名匹配
+        #         first_desc = soup.find('div', class_=lambda x: x and '_3MR2i' in x)
+        #         if first_desc:
+        #             # 同样使用部分类名匹配
+        #             desc_content = first_desc.find('div', class_=lambda x: x and '_1_3uP' in x and '_1rkJa' in x)
+        #             if desc_content:
+        #                 text = ' '.join(line.strip() for line in desc_content.get_text().splitlines() if line.strip())
+        #                 if text:
+        #                     texts.append(text)
+        #                     self.logger.info(f"找到主要描述: {text[:100]}...")
+        #     except Exception as e:
+        #         self.logger.info(f"处理主要描述容器时出错: {str(e)}")
             
-            # 查找所有包含 _3lKf4 的div
-            content_containers = soup.find_all('div', class_=lambda x: x and '_3lKf4' in x)
+        #     # 查找所有包含 _3lKf4 的div
+        #     content_containers = soup.find_all('div', class_=lambda x: x and '_3lKf4' in x)
             
-            if content_containers:
-                self.logger.info(f"找到 {len(content_containers)} 个描述容器")
+        #     if content_containers:
+        #         self.logger.info(f"找到 {len(content_containers)} 个描述容器")
             
-            for container in content_containers:
-                try:
-                    # 使用部分类名匹配
-                    content_div = container.find('div', class_=lambda x: x and '_1RlcV' in x)
-                    if content_div:
-                        desc = content_div.find('div', class_=lambda x: x and '_1_3uP' in x and '_1rkJa' in x)
-                        if desc:
-                            # 处理段落
-                            paragraphs = desc.find_all('p')
-                            if paragraphs:
-                                for p in paragraphs:
-                                    text = ' '.join(line.strip() for line in p.get_text().splitlines() if line.strip())
-                                    if text:
-                                        texts.append(text)
-                                        self.logger.info(f"找到段落描述: {text[:100]}...")
-                            else:
-                                # 处理整体文本
-                                text = ' '.join(line.strip() for line in desc.get_text().splitlines() if line.strip())
-                                if text:
-                                    texts.append(text)
-                                    self.logger.info(f"找到整体描述: {text[:100]}...")
-                except Exception as e:
-                    self.logger.error(f"处理描述容器时出错: {str(e)}")
-                    continue
+        #     for container in content_containers:
+        #         try:
+        #             # 使用部分类名匹配
+        #             content_div = container.find('div', class_=lambda x: x and '_1RlcV' in x)
+        #             if content_div:
+        #                 desc = content_div.find('div', class_=lambda x: x and '_1_3uP' in x and '_1rkJa' in x)
+        #                 if desc:
+        #                     # 处理段落
+        #                     paragraphs = desc.find_all('p')
+        #                     if paragraphs:
+        #                         for p in paragraphs:
+        #                             text = ' '.join(line.strip() for line in p.get_text().splitlines() if line.strip())
+        #                             if text:
+        #                                 texts.append(text)
+        #                                 self.logger.info(f"找到段落描述: {text[:100]}...")
+        #                     else:
+        #                         # 处理整体文本
+        #                         text = ' '.join(line.strip() for line in desc.get_text().splitlines() if line.strip())
+        #                         if text:
+        #                             texts.append(text)
+        #                             self.logger.info(f"找到整体描述: {text[:100]}...")
+        #         except Exception as e:
+        #             self.logger.error(f"处理描述容器时出错: {str(e)}")
+        #             continue
 
-            if not texts:
-                self.logger.warning("未找到任何描述内容")
-                # 保存页面内容以供调试
-                debug_file = os.path.join('debug', f'page_{hash(html_content) % 10000000000}.html')
-                os.makedirs('debug', exist_ok=True)
-                with open(debug_file, 'w', encoding='utf-8') as f:
-                    f.write(html_content)
-                self.logger.info(f"已保存HTML内容到: {debug_file}")
-                # 返回空字符串而不是None，这样parse_article不会直接返回None
-                return ""
+        #     if not texts:
+        #         self.logger.warning("未找到任何描述内容")
+        #         # 保存页面内容以供调试
+        #         debug_file = os.path.join('debug', f'page_{hash(html_content) % 10000000000}.html')
+        #         os.makedirs('debug', exist_ok=True)
+        #         with open(debug_file, 'w', encoding='utf-8') as f:
+        #             f.write(html_content)
+        #         self.logger.info(f"已保存HTML内容到: {debug_file}")
+        #         # 返回空字符串而不是None，这样parse_article不会直接返回None
+        #         return ""
             
-            return '\n\n'.join(texts)
+        #     return '\n\n'.join(texts)
             
-        except Exception as e:
-            self.logger.error(f"提取描述文本时出错: {str(e)}")
-            import traceback
-            self.logger.error(traceback.format_exc())
-            # 返回空字符串而不是None
-            return ""
+        # except Exception as e:
+        #     self.logger.error(f"提取描述文本时出错: {str(e)}")
+        #     import traceback
+        #     self.logger.error(traceback.format_exc())
+        #     # 返回空字符串而不是None
+        #     return ""
 
     def crawl_single_url(self, url):
         """针对单个URL爬取实现"""
@@ -351,24 +352,27 @@ if __name__ == "__main__":
         "https://assetstore.unity.com/packages/3d/environments/landscapes/terrain-sample-asset-pack-145808",
     ]
     
-    # 创建爬虫实例 - 禁用代理和SSL验证
+    # 创建爬虫实例
     crawler = UnityAssetCrawler(max_workers=3, delay=1)
-    crawler.session.proxies = {}  # 禁用代理
-    crawler.session.verify = False  # 禁用SSL验证
     
-    # 开始爬取
-    results = crawler.crawl_urls(urls)
-    
-    # 测试图片下载
-    if results and len(results) > 0:
-        # 获取第一个结果的HTML内容
-        html_content = crawler.get_page_content(results[0]['url'])
-        # 重新解析以测试图片下载
-        article_with_images = crawler.parse_article(html_content, results[0]['url'], results[0]['title'])
-        if article_with_images and 'image_paths' in article_with_images:
-            print(f"\n下载的图片路径:")
-            for img_path in article_with_images['image_paths']:
-                print(f"- {img_path}")
-    
-    print(f"成功爬取 {len(results)} 个页面")
-    print(results)
+    try:
+        # 获取页面内容
+        response = crawler.session.get(urls[0])
+        response.raise_for_status()
+                            
+        # 解析页面内容
+        parsed_content = crawler.parse_article(response.text, urls[0])
+        
+        if parsed_content:
+            print("\n成功解析页面内容")
+            if 'image_paths' in parsed_content:
+                print(f"\n下载的图片路径:")
+                for img_path in parsed_content['image_paths']:
+                    print(f"- {img_path}")
+            else:
+                print("未找到图片")
+        else:
+            print("页面解析失败")
+            
+    except Exception as e:
+        print(f"爬取过程中出错: {str(e)}")

@@ -2,7 +2,7 @@ import os
 from handlefilename import clean_file_names
 from googleserach import google_search
 from assets4free_crawler import Assets4FreeCrawler
-from taobao_crawler import TaoBaoCrawler
+from unityasset_crawler import UnityAssetCrawler
 from input_utils import select_with_timeout
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -31,20 +31,20 @@ class TLSAdapter(HTTPAdapter):
 def get_crawler_instance(crawler_type=None, max_workers=3, delay=1, disable_ssl_verification=False):
     """
     获取爬虫实例
-    :param crawler_type: 爬虫类型，可以是 'assets4free' 或 'taobao'
+    :param crawler_type: 爬虫类型，可以是 'assets4free' 或 'unityasset'
     :return: 爬虫实例
     """
     if crawler_type is None:
         print("\n选择爬虫类型：")
         print("1. Assets4Free爬虫")
-        print("2. 淘宝爬虫")
+        print("2. UnityAsset爬虫")
         choice = select_with_timeout("请选择爬虫类型 (1/2): ").strip()
-        crawler_type = 'assets4free' if choice == '1' else 'taobao'
+        crawler_type = 'assets4free' if choice == '1' else 'unityasset'
     
     if crawler_type == 'assets4free':
         return Assets4FreeCrawler(max_workers=max_workers, delay=delay)
     else:
-        return TaoBaoCrawler(max_workers=max_workers, delay=delay)
+        return UnityAssetCrawler(max_workers=max_workers, delay=delay)
 
 
 def process_single_asset(directory, file_info, disable_ssl_verification=False):
@@ -63,7 +63,7 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
     print("2. Unity Assets 4 Free")
     site_choice = select_with_timeout("请选择搜索网站 (1/2): ").strip()
     website = "site:assetstore.unity.com " if site_choice == '1' else "site:unityassets4free.com "
-    crawler_type = 'taobao' if site_choice == '1' else 'assets4free'
+    crawler_type = 'unityasset' if site_choice == '1' else 'assets4free'
 
     # 1. 使用 Google 搜索获取标题和链接
     while True:
@@ -184,7 +184,7 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
         print("2. Unity Assets 4 Free")
         site_choice = select_with_timeout("请选择搜索网站 (1/2)", "1")
         website = "site:assetstore.unity.com " if site_choice == '1' else "site:unityassets4free.com "
-        crawler_type = 'taobao' if site_choice == '1' else 'assets4free'
+        crawler_type = 'unityasset' if site_choice == '1' else 'assets4free'
         
         # 如果爬虫类型改变，创建新的爬虫实例
         if crawler_type != last_crawler_type:
@@ -259,8 +259,8 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
     for i, result in enumerate(results):
         print(f"文件 {i + 1}: {result.get('title', '未知标题')}")
     
-    # 如果有结果且使用的是TaoBaoCrawler，保存到Excel
-    if results and isinstance(crawler, TaoBaoCrawler):
+    # 如果有结果且使用的是UnityAssetCrawler，保存到Excel
+    if results and isinstance(crawler, UnityAssetCrawler):
         crawler.results = results
         crawler.save_to_excel()
 
