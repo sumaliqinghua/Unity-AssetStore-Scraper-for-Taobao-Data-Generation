@@ -9,7 +9,7 @@ import re
 import pandas as pd
 from datetime import datetime
 
-class TaoBaoCrawler(BaseCrawler):
+class UnityAssetCrawler(BaseCrawler):
     def __init__(self, max_workers=3, delay=1):
         super().__init__(
             base_url="https://assetstore.unity.com",  # 修正基础URL
@@ -56,13 +56,13 @@ class TaoBaoCrawler(BaseCrawler):
                     title_tag = soup.find('title')
                     title = title_tag.text if title_tag else '未命名'
             
-            # 获取描述
-            description = None
+            # 获取文本
+            content = None
             
-            if not description:
-                description = self.extract_description_text(html_content)
+            if not content:
+                content = self.extract_content_text(html_content)
                 
-            if not description:
+            if not content:
                 return None
             
             # 生成文件名 - 移除所有非法字符
@@ -164,13 +164,13 @@ class TaoBaoCrawler(BaseCrawler):
                     downloaded_count += 1
             
             # 翻译描述文本
-            translated_description = self.translate_text(description) if description else ""
+            translated_content = self.translate_text(content) if content else ""
             
             return {
                 'title': title,
                 'url': url,  # 使用传入的URL
-                'content': description,
-                'translated_content': translated_description,
+                'content': content,
+                'translated_content': translated_content,
                 'file_path': file_path,
                 'file_name': file_name,
                 'save_dir': os.path.abspath(save_dir),  # 使用绝对路径
@@ -181,15 +181,8 @@ class TaoBaoCrawler(BaseCrawler):
             self.logger.error(f"解析页面时出错: {e}")
             return None
 
-    def extract_description_text(self, html_content):
-        """
-        Extract text from description divs based on their structure
+    def extract_content_text(self, html_content):
 
-        Args:
-            html_content: HTML content as string
-        Returns:
-            str: Concatenated text from the divs with proper formatting
-        """
         try:
             if not html_content:
                 self.logger.error("HTML内容为空")
@@ -213,12 +206,12 @@ class TaoBaoCrawler(BaseCrawler):
                 self.logger.info(f"处理主要描述容器时出错: {str(e)}")
             
             # 查找所有包含 _3lKf4 的div
-            description_containers = soup.find_all('div', class_=lambda x: x and '_3lKf4' in x)
+            content_containers = soup.find_all('div', class_=lambda x: x and '_3lKf4' in x)
             
-            if description_containers:
-                self.logger.info(f"找到 {len(description_containers)} 个描述容器")
+            if content_containers:
+                self.logger.info(f"找到 {len(content_containers)} 个描述容器")
             
-            for container in description_containers:
+            for container in content_containers:
                 try:
                     # 使用部分类名匹配
                     content_div = container.find('div', class_=lambda x: x and '_1RlcV' in x)
@@ -359,7 +352,7 @@ if __name__ == "__main__":
     ]
     
     # 创建爬虫实例 - 禁用代理和SSL验证
-    crawler = TaoBaoCrawler(max_workers=3, delay=1)
+    crawler = UnityAssetCrawler(max_workers=3, delay=1)
     crawler.session.proxies = {}  # 禁用代理
     crawler.session.verify = False  # 禁用SSL验证
     
