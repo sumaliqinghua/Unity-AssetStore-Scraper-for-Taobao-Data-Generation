@@ -1,7 +1,9 @@
 import site
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
+from input_utils import select_with_timeout
 
 def google_search(query):
     # 配置Chrome选项
@@ -40,7 +42,7 @@ def google_search(query):
                 print("\n当前页面未找到搜索结果")
 
             # 询问是否使用当前页面的结果
-            user_input = input("\n是否使用当前页面的结果？(y/n): ").strip().lower()
+            user_input = select_with_timeout("是否使用当前页面的结果？(y/n): ",'y').strip().lower()
             if user_input == 'y':
                 return search_results
             elif user_input == 'n':
@@ -53,7 +55,7 @@ def google_search(query):
                 
     finally:
         # 询问是否关闭浏览器
-        close = input("\n是否关闭浏览器？(y/n): ").strip().lower()
+        close = select_with_timeout("\n是否关闭浏览器？(y/n): ",'y',3).strip().lower()
         if close == 'y':
             driver.quit()
         else:

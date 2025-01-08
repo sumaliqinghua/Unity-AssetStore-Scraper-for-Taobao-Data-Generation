@@ -18,6 +18,10 @@ class TaoBaoCrawler(BaseCrawler):
             use_proxy=False,  # 禁用代理
             disable_ssl_verification=True  # 禁用SSL验证
         )
+        # 显式禁用所有代理设置
+        self.session.proxies.clear()
+        self.session.trust_env = False  # 禁用环境变量中的代理设置
+        self.session.verify = False  # 显式禁用SSL验证
 
     def parse_article(self, html_content, url, custom_title=None, file_path=None):
         """
@@ -54,13 +58,6 @@ class TaoBaoCrawler(BaseCrawler):
             
             # 获取描述
             description = None
-            meta_desc = soup.find('meta', property='og:description')
-            if meta_desc:
-                description = meta_desc.get('content')
-            if not description:
-                meta_desc = soup.find('meta', {'name': 'description'})
-                if meta_desc:
-                    description = meta_desc.get('content')
             
             if not description:
                 description = self.extract_description_text(html_content)
@@ -187,7 +184,7 @@ class TaoBaoCrawler(BaseCrawler):
     def extract_description_text(self, html_content):
         """
         Extract text from description divs based on their structure
-        
+
         Args:
             html_content: HTML content as string
         Returns:
@@ -196,58 +193,74 @@ class TaoBaoCrawler(BaseCrawler):
         try:
             if not html_content:
                 self.logger.error("HTML内容为空")
-                return ""
-                
-            self.logger.info(f"HTML内容长度: {len(html_content)}")
+                return None
+
             soup = BeautifulSoup(html_content, 'html.parser')
             texts = []
             
-            # 打印页面标题，帮助确认页面是否正确加载
-            title = soup.find('title')
-            if title:
-                self.logger.info(f"页面标题: {title.text}")
-                texts.append(f"标题: {title.text}")
+            try:
+                # 使用部分类名匹配
+                first_desc = soup.find('div', class_=lambda x: x and '_3MR2i' in x)
+                if first_desc:
+                    # 同样使用部分类名匹配
+                    desc_content = first_desc.find('div', class_=lambda x: x and '_1_3uP' in x and '_1rkJa' in x)
+                    if desc_content:
+                        text = ' '.join(line.strip() for line in desc_content.get_text().splitlines() if line.strip())
+                        if text:
+                            texts.append(text)
+                            self.logger.info(f"找到主要描述: {text[:100]}...")
+            except Exception as e:
+                self.logger.info(f"处理主要描述容器时出错: {str(e)}")
             
-            # 尝试从meta description获取描述
-            meta_desc = soup.find('meta', {'name': 'description'})
-            if meta_desc and meta_desc.get('content'):
-                self.logger.info("找到meta description")
-                texts.append(f"描述: {meta_desc['content']}")
+            # 查找所有包含 _3lKf4 的div
+            description_containers = soup.find_all('div', class_=lambda x: x and '_3lKf4' in x)
             
-            # 尝试从JSON-LD中获取描述
-            script_tags = soup.find_all('script', {'type': 'application/ld+json'})
-            for script in script_tags:
+            if description_containers:
+                self.logger.info(f"找到 {len(description_containers)} 个描述容器")
+            
+            for container in description_containers:
                 try:
-                    json_data = json.loads(script.string)
-                    if isinstance(json_data, dict):
-                        if 'description' in json_data:
-                            self.logger.info("从JSON-LD中找到描述")
-                            texts.append(f"详细描述: {json_data['description']}")
+                    # 使用部分类名匹配
+                    content_div = container.find('div', class_=lambda x: x and '_1RlcV' in x)
+                    if content_div:
+                        desc = content_div.find('div', class_=lambda x: x and '_1_3uP' in x and '_1rkJa' in x)
+                        if desc:
+                            # 处理段落
+                            paragraphs = desc.find_all('p')
+                            if paragraphs:
+                                for p in paragraphs:
+                                    text = ' '.join(line.strip() for line in p.get_text().splitlines() if line.strip())
+                                    if text:
+                                        texts.append(text)
+                                        self.logger.info(f"找到段落描述: {text[:100]}...")
+                            else:
+                                # 处理整体文本
+                                text = ' '.join(line.strip() for line in desc.get_text().splitlines() if line.strip())
+                                if text:
+                                    texts.append(text)
+                                    self.logger.info(f"找到整体描述: {text[:100]}...")
                 except Exception as e:
-                    self.logger.warning(f"解析JSON-LD数据时出错: {e}")
-            
-            # 查找所有可能包含描述的div
-            description_divs = soup.find_all(['div', 'p'], class_=lambda x: x and any(keyword in str(x).lower() for keyword in ['description', 'content', 'detail', 'info']))
-            for div in description_divs:
-                text = ' '.join(line.strip() for line in div.get_text().splitlines() if line.strip())
-                if text and len(text) > 50:  # 只保留较长的文本，避免无用信息
-                    self.logger.info(f"找到描述div: {text[:100]}...")
-                    texts.append(text)
-            
+                    self.logger.error(f"处理描述容器时出错: {str(e)}")
+                    continue
+
             if not texts:
-                # 保存HTML内容以供调试
-                debug_file = 'debug_html.txt'
+                self.logger.warning("未找到任何描述内容")
+                # 保存页面内容以供调试
+                debug_file = os.path.join('debug', f'page_{hash(html_content) % 10000000000}.html')
+                os.makedirs('debug', exist_ok=True)
                 with open(debug_file, 'w', encoding='utf-8') as f:
                     f.write(html_content)
-                self.logger.warning(f"未找到任何描述内容，已保存HTML到{debug_file}")
+                self.logger.info(f"已保存HTML内容到: {debug_file}")
+                # 返回空字符串而不是None，这样parse_article不会直接返回None
                 return ""
-                
+            
             return '\n\n'.join(texts)
             
         except Exception as e:
             self.logger.error(f"提取描述文本时出错: {str(e)}")
             import traceback
             self.logger.error(traceback.format_exc())
+            # 返回空字符串而不是None
             return ""
 
     def crawl_single_url(self, url):

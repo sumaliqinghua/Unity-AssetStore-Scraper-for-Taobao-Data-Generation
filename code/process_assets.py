@@ -3,12 +3,16 @@ from handlefilename import clean_file_names
 from googleserach import google_search
 from assets4free_crawler import Assets4FreeCrawler
 from taobao_crawler import TaoBaoCrawler
+from input_utils import select_with_timeout
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from urllib3.util.ssl_ import create_urllib3_context
 import warnings
 from requests.exceptions import SSLError
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+import threading
+import msvcrt
+import time
 
 # 忽略 SSL 警告（如果需要禁用 SSL 验证）
 warnings.simplefilter("ignore", InsecureRequestWarning)
@@ -34,7 +38,7 @@ def get_crawler_instance(crawler_type=None, max_workers=3, delay=1, disable_ssl_
         print("\n选择爬虫类型：")
         print("1. Assets4Free爬虫")
         print("2. 淘宝爬虫")
-        choice = input("请选择爬虫类型 (1/2): ").strip()
+        choice = select_with_timeout("请选择爬虫类型 (1/2): ").strip()
         crawler_type = 'assets4free' if choice == '1' else 'taobao'
     
     if crawler_type == 'assets4free':
@@ -57,7 +61,7 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
     print("\n选择搜索网站：")
     print("1. Unity Asset Store")
     print("2. Unity Assets 4 Free")
-    site_choice = input("请选择搜索网站 (1/2): ").strip()
+    site_choice = select_with_timeout("请选择搜索网站 (1/2): ").strip()
     website = "site:assetstore.unity.com " if site_choice == '1' else "site:unityassets4free.com "
     crawler_type = 'taobao' if site_choice == '1' else 'assets4free'
 
@@ -69,7 +73,7 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
 
         if not search_results:
             print(f"未找到相关搜索结果 {search_query}")
-            user_input = input("请输入新的搜索词（直接回车退出）: ")
+            user_input = select_with_timeout("请输入新的搜索词（直接回车退出）", "")
             if not user_input:
                 return False
             file_info['cleaned_name'] = user_input
@@ -81,11 +85,11 @@ def process_single_asset(directory, file_info, disable_ssl_verification=False):
             print(f"{i}. 标题: {result['title']}")
             print(f"   链接: {result['link']}\n")
         
-        choice = input("请选择要使用的结果编号（输入数字），输入n重新搜索，直接回车退出：").strip()
+        choice = select_with_timeout("请选择要使用的结果编号（输入数字），输入n重新搜索，直接回车退出：").strip()
         if not choice:
             return False
         if choice.lower() == 'n':
-            user_input = input("请输入新的搜索词: ")
+            user_input = select_with_timeout("请输入新的搜索词", file_info['cleaned_name'])
             if user_input:
                 file_info['cleaned_name'] = user_input
                 continue
@@ -178,7 +182,7 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
         print("\n选择搜索网站：")
         print("1. Unity Asset Store")
         print("2. Unity Assets 4 Free")
-        site_choice = input("请选择搜索网站 (1/2): ").strip()
+        site_choice = select_with_timeout("请选择搜索网站 (1/2)", "1")
         website = "site:assetstore.unity.com " if site_choice == '1' else "site:unityassets4free.com "
         crawler_type = 'taobao' if site_choice == '1' else 'assets4free'
         
@@ -195,7 +199,7 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
 
             if not search_results:
                 print(f"未找到相关搜索结果 {search_query}")
-                user_input = input("请输入新的搜索词（直接回车退出）: ")
+                user_input = select_with_timeout("请输入新的搜索词（直接回车退出）", "")
                 if not user_input:
                     break
                 file_info['cleaned_name'] = user_input
@@ -207,11 +211,11 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
                 print(f"{i}. 标题: {result['title']}")
                 print(f"   链接: {result['link']}\n")
             
-            choice = input("请选择要使用的结果编号（输入数字），输入n重新搜索，直接回车退出：").strip()
+            choice = select_with_timeout("请选择要使用的结果编号（输入数字），输入n重新搜索，直接回车退出", "1")
             if not choice:
                 break
             if choice.lower() == 'n':
-                user_input = input("请输入新的搜索词: ")
+                user_input = select_with_timeout("请输入新的搜索词", file_info['cleaned_name'])
                 if user_input:
                     file_info['cleaned_name'] = user_input
                     continue
