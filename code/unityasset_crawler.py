@@ -184,78 +184,7 @@ class UnityAssetCrawler(BaseCrawler):
     def extract_content_text(self, html_content):
 
         return html_content
-        # try:
-        #     if not html_content:
-        #         self.logger.error("HTML内容为空")
-        #         return None
-
-        #     soup = BeautifulSoup(html_content, 'html.parser')
-        #     texts = []
-            
-        #     try:
-        #         # 使用部分类名匹配
-        #         first_desc = soup.find('div', class_=lambda x: x and '_3MR2i' in x)
-        #         if first_desc:
-        #             # 同样使用部分类名匹配
-        #             desc_content = first_desc.find('div', class_=lambda x: x and '_1_3uP' in x and '_1rkJa' in x)
-        #             if desc_content:
-        #                 text = ' '.join(line.strip() for line in desc_content.get_text().splitlines() if line.strip())
-        #                 if text:
-        #                     texts.append(text)
-        #                     self.logger.info(f"找到主要描述: {text[:100]}...")
-        #     except Exception as e:
-        #         self.logger.info(f"处理主要描述容器时出错: {str(e)}")
-            
-        #     # 查找所有包含 _3lKf4 的div
-        #     content_containers = soup.find_all('div', class_=lambda x: x and '_3lKf4' in x)
-            
-        #     if content_containers:
-        #         self.logger.info(f"找到 {len(content_containers)} 个描述容器")
-            
-        #     for container in content_containers:
-        #         try:
-        #             # 使用部分类名匹配
-        #             content_div = container.find('div', class_=lambda x: x and '_1RlcV' in x)
-        #             if content_div:
-        #                 desc = content_div.find('div', class_=lambda x: x and '_1_3uP' in x and '_1rkJa' in x)
-        #                 if desc:
-        #                     # 处理段落
-        #                     paragraphs = desc.find_all('p')
-        #                     if paragraphs:
-        #                         for p in paragraphs:
-        #                             text = ' '.join(line.strip() for line in p.get_text().splitlines() if line.strip())
-        #                             if text:
-        #                                 texts.append(text)
-        #                                 self.logger.info(f"找到段落描述: {text[:100]}...")
-        #                     else:
-        #                         # 处理整体文本
-        #                         text = ' '.join(line.strip() for line in desc.get_text().splitlines() if line.strip())
-        #                         if text:
-        #                             texts.append(text)
-        #                             self.logger.info(f"找到整体描述: {text[:100]}...")
-        #         except Exception as e:
-        #             self.logger.error(f"处理描述容器时出错: {str(e)}")
-        #             continue
-
-        #     if not texts:
-        #         self.logger.warning("未找到任何描述内容")
-        #         # 保存页面内容以供调试
-        #         debug_file = os.path.join('debug', f'page_{hash(html_content) % 10000000000}.html')
-        #         os.makedirs('debug', exist_ok=True)
-        #         with open(debug_file, 'w', encoding='utf-8') as f:
-        #             f.write(html_content)
-        #         self.logger.info(f"已保存HTML内容到: {debug_file}")
-        #         # 返回空字符串而不是None，这样parse_article不会直接返回None
-        #         return ""
-            
-        #     return '\n\n'.join(texts)
-            
-        # except Exception as e:
-        #     self.logger.error(f"提取描述文本时出错: {str(e)}")
-        #     import traceback
-        #     self.logger.error(traceback.format_exc())
-        #     # 返回空字符串而不是None
-        #     return ""
+    
 
     def crawl_single_url(self, url):
         """针对单个URL爬取实现"""
@@ -341,6 +270,41 @@ class UnityAssetCrawler(BaseCrawler):
             self.logger.error(f'下载图片时出错: {e}')
             return None
 
+    def save_to_excel(self):
+        """
+        重写基类的save_to_excel方法，处理空描述和翻译描述的情况
+        """
+        excel_file = os.path.join(self.base_download_dir, 'assets_data.xlsx')
+
+        # 转换数据为DataFrame
+        df_data = []
+        for result in self.results:
+            # 确保save_dir使用绝对路径
+            save_dir = result.get('save_dir', '')
+            if save_dir and not os.path.isabs(save_dir):
+                save_dir = os.path.abspath(save_dir)
+
+            # 处理空描述和翻译描述
+            content = result.get('content', '')
+            translated_content = result.get('translated_content', '')
+
+            row = {
+                '标题': result.get('title', ''),
+                '链接': result.get('url', ''),
+                '描述': '',
+                '翻译后的描述': '',
+                '文件路径': result.get('file_path', ''),
+                '文件名': result.get('file_name', ''),
+                '图片文件夹': save_dir
+            }
+            df_data.append(row)
+
+        # 创建DataFrame并保存到Excel
+        df = pd.DataFrame(df_data)
+        df.to_excel(excel_file, index=False, engine='openpyxl')
+        self.logger.info(f"数据已保存到Excel文件: {excel_file}")
+    def translate_text(self, text):
+        return ''
     def crawl_urls(self, urls):
         """爬取多个URL"""
         return super().crawl_urls(urls)
