@@ -97,17 +97,16 @@ class BaseCrawler:
         return full_path
 
     def save_to_excel(self):
-        """保存结果到Excel文件"""
-        if not self.results:
-            self.logger.warning("没有数据可以保存")
-            return
-
-        # 使用固定的Excel文件路径
+        """保存结果到Excel文件，包含文件移动功能"""
         excel_file = os.path.join(self.base_download_dir, 'assets_data.xlsx')
 
         # 转换数据为DataFrame
         df_data = []
         for result in self.results:
+            # 移动文件到新位置
+            original_path = result.get('file_path', '')
+            new_path = self.move_file_to_destination(original_path)
+            
             # 确保save_dir使用绝对路径
             save_dir = result.get('save_dir', '')
             if save_dir and not os.path.isabs(save_dir):
@@ -118,7 +117,7 @@ class BaseCrawler:
                 '链接': result.get('url', ''),
                 '描述': result.get('content', ''),
                 '翻译后的描述': result.get('translated_content', ''),
-                '文件路径': result.get('file_path', ''),
+                '文件路径': new_path,  # 使用新的文件路径
                 '文件名': result.get('file_name', ''),
                 '图片文件夹': save_dir
             }
@@ -131,8 +130,8 @@ class BaseCrawler:
             # 如果文件存在，读取现有数据并追加新数据
             if os.path.exists(excel_file):
                 existing_df = pd.read_excel(excel_file)
-                # 合并数据，删除重复项（基于URL）
-                combined_df = pd.concat([existing_df, new_df]).drop_duplicates(subset=['链接'], keep='last')
+                # 合并数据，删除重复项（基于文件路径）
+                combined_df = pd.concat([existing_df, new_df]).drop_duplicates(subset=['文件路径'], keep='last')
                 combined_df.to_excel(excel_file, index=False, engine='openpyxl')
             else:
                 # 如果文件不存在，直接保存新数据
@@ -141,6 +140,42 @@ class BaseCrawler:
             self.logger.info(f"数据已保存到: {excel_file}")
         except Exception as e:
             self.logger.error(f"保存Excel文件时出错: {e}")
+
+    def move_file_to_destination(self, file_path):
+        """
+        将文件移动到指定目录
+        Args:
+            file_path: 原文件路径
+        Returns:
+            str: 新的文件路径，如果移动失败则返回原路径
+        """
+        if not file_path or not os.path.exists(file_path):
+            return file_path
+
+        try:
+            # 创建目标目录
+            dest_dir = r"F:\BaiduNetdiskDownload\0moved"
+            os.makedirs(dest_dir, exist_ok=True)
+            
+            # 构建目标路径
+            file_name = os.path.basename(file_path)
+            new_path = os.path.join(dest_dir, file_name)
+            
+            # 如果目标文件已存在，添加数字后缀
+            base_name, ext = os.path.splitext(file_name)
+            counter = 1
+            while os.path.exists(new_path):
+                new_path = os.path.join(dest_dir, f"{base_name}_{counter}{ext}")
+                counter += 1
+            
+            # 移动文件
+            os.rename(file_path, new_path)
+            self.logger.info(f"文件已移动: {file_path} -> {new_path}")
+            return new_path
+            
+        except Exception as e:
+            self.logger.error(f"移动文件失败: {str(e)}")
+            return file_path
 
     def crawl_urls(self, urls):
         """爬取多个URL并保存结果"""

@@ -173,6 +173,8 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
 
     # 处理每个指定的文件
     results = []
+    skipped_files = []  # 用于记录跳过的文件
+    
     for idx in valid_indices:
         print(f"\n开始处理第 {idx + 1} 个文件:")
         file_info = all_files[idx]
@@ -191,6 +193,10 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
             crawler = get_crawler_instance(crawler_type=crawler_type)
             last_crawler_type = crawler_type
 
+        # 标记是否处理成功
+        processed = False
+        skip_reason = None
+
         # 1. 使用 Google 搜索获取标题和链接
         while True:
             search_query = f"{website}{file_info['cleaned_name']}"
@@ -201,6 +207,7 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
                 print(f"未找到相关搜索结果 {search_query}")
                 user_input = select_with_timeout("请输入新的搜索词（直接回车退出）", "")
                 if not user_input:
+                    skip_reason = "未找到搜索结果"
                     break
                 file_info['cleaned_name'] = user_input
                 continue
@@ -213,12 +220,14 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
             
             choice = select_with_timeout("请选择要使用的结果编号（输入数字），输入n重新搜索，直接回车退出", "1")
             if not choice:
+                skip_reason = "用户跳过选择"
                 break
             if choice.lower() == 'n':
                 user_input = select_with_timeout("请输入新的搜索词", file_info['cleaned_name'])
                 if user_input:
                     file_info['cleaned_name'] = user_input
                     continue
+                skip_reason = "用户选择重新搜索后退出"
                 break
             
             try:
@@ -241,9 +250,11 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
                             parsed_content['url'] = selected_result['link']
                             print("成功获取页面内容")
                             results.append(parsed_content)
+                            processed = True
                         else:
-                            print("无法解析页面内容")
+                            skip_reason = "无法解析页面内容"
                     except Exception as e:
+                        skip_reason = f"处理出错: {str(e)}"
                         print(f"处理过程中出错: {str(e)}")
                     
                     break
@@ -254,10 +265,24 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
                 print("无效的输入，请重试")
                 continue
 
+        if not processed:
+            skipped_files.append({
+                'index': idx,
+                'name': file_info['original_name'],
+                'reason': skip_reason
+            })
+
     # 打印处理结果摘要
     print("\n处理结果摘要:")
+    print(f"\n成功处理的文件 ({len(results)}/{len(valid_indices)}):")
     for i, result in enumerate(results):
         print(f"文件 {i + 1}: {result.get('title', '未知标题')}")
+    
+    if skipped_files:
+        print(f"\n跳过的文件 ({len(skipped_files)}/{len(valid_indices)}):")
+        for skip_info in skipped_files:
+            print(f"文件 {skip_info['index']}: {skip_info['name']}")
+            print(f"  原因: {skip_info['reason']}")
     
     # 如果有结果且使用的是UnityAssetCrawler，保存到Excel
     if results and isinstance(crawler, UnityAssetCrawler):
@@ -268,4 +293,4 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
 if __name__ == "__main__":
     # 示例用法
     target_directory = r"F:\0游戏教程\0tele"  # 替换为实际目录
-    process_assets(target_directory, file_indices=[0,1,2,3], disable_ssl_verification=True)  # 处理多个文件
+    process_assets(target_directory, file_indices=[0,1,2,3,4,5], disable_ssl_verification=True)  # 处理多个文件

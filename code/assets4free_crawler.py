@@ -26,13 +26,13 @@ class Assets4FreeCrawler(BaseCrawler):
         """
         try:
             # 保存HTML内容到文件
-            debug_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'debug')
-            os.makedirs(debug_dir, exist_ok=True)
-            debug_file = os.path.join(debug_dir, f'page_{int(time.time())}.html')
-            with open(debug_file, 'w', encoding='utf-8') as f:
-                f.write(f"<!-- Original URL: {url} -->\n")
-                f.write(html_content)
-            self.logger.info(f"已保存HTML内容到: {debug_file}")
+            # debug_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'debug')
+            # os.makedirs(debug_dir, exist_ok=True)
+            # debug_file = os.path.join(debug_dir, f'page_{int(time.time())}.html')
+            # with open(debug_file, 'w', encoding='utf-8') as f:
+            #     f.write(f"<!-- Original URL: {url} -->\n")
+            #     f.write(html_content)
+            # self.logger.info(f"已保存HTML内容到: {debug_file}")
 
             soup = BeautifulSoup(html_content, 'html.parser')
             

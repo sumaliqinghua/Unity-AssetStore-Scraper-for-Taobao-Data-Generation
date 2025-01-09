@@ -36,13 +36,13 @@ class UnityAssetCrawler(BaseCrawler):
         """
         try:
             # 保存HTML内容到文件
-            debug_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'debug')
-            os.makedirs(debug_dir, exist_ok=True)
-            debug_file = os.path.join(debug_dir, f'page_{int(time.time())}.html')
-            with open(debug_file, 'w', encoding='utf-8') as f:
-                f.write(f"<!-- Original URL: {url} -->\n")
-                f.write(html_content)
-            self.logger.info(f"已保存HTML内容到: {debug_file}")
+            # debug_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'debug')
+            # os.makedirs(debug_dir, exist_ok=True)
+            # debug_file = os.path.join(debug_dir, f'page_{int(time.time())}.html')
+            # with open(debug_file, 'w', encoding='utf-8') as f:
+            #     f.write(f"<!-- Original URL: {url} -->\n")
+            #     f.write(html_content)
+            # self.logger.info(f"已保存HTML内容到: {debug_file}")
 
             soup = BeautifulSoup(html_content, 'html.parser')
             
@@ -158,7 +158,7 @@ class UnityAssetCrawler(BaseCrawler):
                 
                 self.logger.info(f'尝试下载图片: {img_url}')
                 img_path = self.download_image(img_url, save_dir)
-                if img_path:
+                if img_path:  # 只有成功下载的图片才添加到列表中
                     images.append(img_path)
                     self.logger.info(f'成功下载图片: {img_path}')
                     downloaded_count += 1
@@ -168,13 +168,13 @@ class UnityAssetCrawler(BaseCrawler):
             
             return {
                 'title': title,
-                'url': url,  # 使用传入的URL
+                'url': url,
                 'content': content,
                 'translated_content': translated_content,
                 'file_path': file_path,
                 'file_name': file_name,
-                'save_dir': os.path.abspath(save_dir),  # 使用绝对路径
-                'image_paths': images
+                'save_dir': os.path.abspath(save_dir),
+                'image_paths': images  # 只包含成功下载的图片路径
             }
             
         except Exception as e:
@@ -269,6 +269,7 @@ class UnityAssetCrawler(BaseCrawler):
                 'sec-fetch-site': 'cross-site'
             })
 
+            save_path = None
             for attempt in range(max_retries):
                 try:
                     # 生成文件名
@@ -297,6 +298,7 @@ class UnityAssetCrawler(BaseCrawler):
                     # 验证文件大小
                     if os.path.getsize(save_path) < 100:  # 小于100字节可能是无效图片
                         os.remove(save_path)
+                        save_path = None
                         raise Exception("Downloaded file too small")
                         
                     self.logger.info(f'成功下载图片: {save_path}')
@@ -304,52 +306,108 @@ class UnityAssetCrawler(BaseCrawler):
                     
                 except requests.exceptions.RequestException as e:
                     self.logger.warning(f'下载图片失败 (尝试 {attempt + 1}/{max_retries}): {url} - {str(e)}')
+                    if save_path and os.path.exists(save_path):
+                        os.remove(save_path)
                     if attempt == max_retries - 1:
                         return None
                     time.sleep(1)  # 重试前等待
                 except Exception as e:
                     self.logger.error(f'下载图片出错: {url} - {str(e)}')
+                    if save_path and os.path.exists(save_path):
+                        os.remove(save_path)
                     if attempt == max_retries - 1:
                         return None
                     time.sleep(1)  # 重试前等待
         
         except Exception as e:
             self.logger.error(f'下载图片时出错: {e}')
+            if save_path and os.path.exists(save_path):
+                os.remove(save_path)
             return None
 
     def save_to_excel(self):
         """
-        重写基类的save_to_excel方法，处理空描述和翻译描述的情况
+        重写基类的save_to_excel方法，处理空描述和翻译描述的情况，并移动文件
         """
         excel_file = os.path.join(self.base_download_dir, 'assets_data.xlsx')
 
         # 转换数据为DataFrame
         df_data = []
         for result in self.results:
+            # 移动文件到新位置
+            original_path = result.get('file_path', '')
+            new_path = self.move_file_to_destination(original_path)
+            
             # 确保save_dir使用绝对路径
             save_dir = result.get('save_dir', '')
             if save_dir and not os.path.isabs(save_dir):
                 save_dir = os.path.abspath(save_dir)
-
-            # 处理空描述和翻译描述
-            content = result.get('content', '')
-            translated_content = result.get('translated_content', '')
 
             row = {
                 '标题': result.get('title', ''),
                 '链接': result.get('url', ''),
                 '描述': '',
                 '翻译后的描述': '',
-                '文件路径': result.get('file_path', ''),
+                '文件路径': new_path,  # 使用新的文件路径
                 '文件名': result.get('file_name', ''),
                 '图片文件夹': save_dir
             }
             df_data.append(row)
 
-        # 创建DataFrame并保存到Excel
-        df = pd.DataFrame(df_data)
-        df.to_excel(excel_file, index=False, engine='openpyxl')
-        self.logger.info(f"数据已保存到Excel文件: {excel_file}")
+        # 创建新的DataFrame
+        new_df = pd.DataFrame(df_data)
+
+        try:
+            # 如果文件存在，读取现有数据并追加新数据
+            if os.path.exists(excel_file):
+                existing_df = pd.read_excel(excel_file)
+                # 合并数据，删除重复项（基于文件路径）
+                combined_df = pd.concat([existing_df, new_df]).drop_duplicates(subset=['文件路径'], keep='last')
+                combined_df.to_excel(excel_file, index=False, engine='openpyxl')
+            else:
+                # 如果文件不存在，直接保存新数据
+                new_df.to_excel(excel_file, index=False, engine='openpyxl')
+            
+            self.logger.info(f"数据已保存到: {excel_file}")
+        except Exception as e:
+            self.logger.error(f"保存Excel文件时出错: {e}")
+
+    def move_file_to_destination(self, file_path):
+        """
+        将文件移动到指定目录
+        Args:
+            file_path: 原文件路径
+        Returns:
+            str: 新的文件路径，如果移动失败则返回原路径
+        """
+        if not file_path or not os.path.exists(file_path):
+            return file_path
+
+        try:
+            # 创建目标目录
+            dest_dir = r"F:\BaiduNetdiskDownload\0moved"
+            os.makedirs(dest_dir, exist_ok=True)
+            
+            # 构建目标路径
+            file_name = os.path.basename(file_path)
+            new_path = os.path.join(dest_dir, file_name)
+            
+            # 如果目标文件已存在，添加数字后缀
+            base_name, ext = os.path.splitext(file_name)
+            counter = 1
+            while os.path.exists(new_path):
+                new_path = os.path.join(dest_dir, f"{base_name}_{counter}{ext}")
+                counter += 1
+            
+            # 移动文件
+            os.rename(file_path, new_path)
+            self.logger.info(f"文件已移动: {file_path} -> {new_path}")
+            return new_path
+            
+        except Exception as e:
+            self.logger.error(f"移动文件失败: {str(e)}")
+            return file_path
+
     def translate_text(self, text):
         return ''
     def crawl_urls(self, urls):
