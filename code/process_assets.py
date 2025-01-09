@@ -268,4 +268,4 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
 if __name__ == "__main__":
     # 示例用法
     target_directory = r"F:\0游戏教程\0tele"  # 替换为实际目录
-    process_assets(target_directory, file_indices=[6], disable_ssl_verification=True)  # 处理多个文件
+    process_assets(target_directory, file_indices=[0,1,2,3], disable_ssl_verification=True)  # 处理多个文件

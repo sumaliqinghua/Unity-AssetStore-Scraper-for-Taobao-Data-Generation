@@ -68,31 +68,26 @@ class BaseCrawler:
             self.logger.warning(f"无法读取robots.txt: {e}")
 
     def translate_text(self, text):
-        """翻译文本，包含错误处理和重试机制"""
+        """翻译文本，使用AI接口进行翻译"""
         if not text:
             return ""
         
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                chunks = [text[i:i+500] for i in range(0, len(text), 500)]
-                translated_chunks = []
-                
-                for chunk in chunks:
-                    translated = self.translator.translate(chunk)
-                    translated_chunks.append(translated)
-                    time.sleep(0.5)
-                
-                return " ".join(translated_chunks)
-            
-            except Exception as e:
-                if attempt == max_retries - 1:
-                    self.logger.error(f"翻译失败: {e}")
-                    return text
-                time.sleep(1)
-                continue
+        from utils.ainormal import get_response
         
-        return text
+        try:
+            # 构建翻译提示
+            msg = [
+                {"role": "system", "content": "You are a professional translator. Translate the following English text to Chinese. Keep the translation accurate and natural. Only return the translated text without any explanations."},
+                {"role": "user", "content": text}
+            ]
+            
+            # 获取翻译结果
+            translated_text = get_response(msg)
+            return translated_text
+            
+        except Exception as e:
+            self.logger.error(f"翻译失败: {e}")
+            return ""
 
     def create_article_directory(self, title):
         """为每篇文章创建独立的目录"""
