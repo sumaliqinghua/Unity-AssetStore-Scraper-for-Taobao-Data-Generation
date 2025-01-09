@@ -231,6 +231,9 @@ class UnityAssetCrawler(BaseCrawler):
         Returns:
             str: 下载的图片路径，如果失败则返回None
         """
+        max_retries = 5
+        timeout = 60
+        
         try:
             # 确保保存目录存在
             os.makedirs(save_dir, exist_ok=True)
@@ -240,31 +243,75 @@ class UnityAssetCrawler(BaseCrawler):
             if not url.startswith(('http://', 'https://')):
                 if url.startswith('//'):
                     url = 'https:' + url
-                else:
+                elif url.startswith('/'):
                     url = urljoin(self.base_url, url)
-        
-            try:
-                # 生成文件名
-                file_ext = os.path.splitext(url.split('?')[0])[1] or '.jpg'
-                file_name = f'image_{int(time.time())}_{hash(url) % 10000}{file_ext}'
-                save_path = os.path.join(save_dir, file_name)
+                else:
+                    url = urljoin(self.base_url, '/' + url)
+
+            # 创建专用的下载session
+            download_session = requests.Session()
+            download_session.verify = False  # 禁用SSL验证
+            download_session.trust_env = False  # 禁用环境变量代理
+            download_session.proxies = {}  # 显式禁用代理
             
-                # 下载图片
-                response = self.session.get(url, stream=True)
-                if response.status_code == 200:
+            # 设置headers模拟浏览器
+            download_session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                'Referer': self.base_url,
+                'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
+                'sec-fetch-dest': 'image',
+                'sec-fetch-mode': 'no-cors',
+                'sec-fetch-site': 'cross-site'
+            })
+
+            for attempt in range(max_retries):
+                try:
+                    # 生成文件名
+                    file_ext = os.path.splitext(url.split('?')[0])[1]
+                    if not file_ext or file_ext.lower() not in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+                        file_ext = '.jpg'
+                    file_name = f'image_{int(time.time())}_{hash(url) % 10000}{file_ext}'
+                    save_path = os.path.join(save_dir, file_name)
+                
+                    # 下载图片
+                    response = download_session.get(url, stream=True, timeout=timeout)
+                    response.raise_for_status()
+                    
+                    # 检查内容类型
+                    content_type = response.headers.get('content-type', '')
+                    if not content_type.startswith('image/'):
+                        self.logger.warning(f'非图片内容类型: {content_type}, URL: {url}')
+                        continue
+
+                    # 保存图片
                     with open(save_path, 'wb') as f:
                         for chunk in response.iter_content(chunk_size=8192):
                             if chunk:
                                 f.write(chunk)
+                    
+                    # 验证文件大小
+                    if os.path.getsize(save_path) < 100:  # 小于100字节可能是无效图片
+                        os.remove(save_path)
+                        raise Exception("Downloaded file too small")
+                        
                     self.logger.info(f'成功下载图片: {save_path}')
                     return save_path
-                else:
-                    self.logger.warning(f'下载图片失败: {url}')
-                    return None
                     
-            except Exception as e:
-                self.logger.error(f'下载图片出错: {url} - {str(e)}')
-                return None
+                except requests.exceptions.RequestException as e:
+                    self.logger.warning(f'下载图片失败 (尝试 {attempt + 1}/{max_retries}): {url} - {str(e)}')
+                    if attempt == max_retries - 1:
+                        return None
+                    time.sleep(1)  # 重试前等待
+                except Exception as e:
+                    self.logger.error(f'下载图片出错: {url} - {str(e)}')
+                    if attempt == max_retries - 1:
+                        return None
+                    time.sleep(1)  # 重试前等待
         
         except Exception as e:
             self.logger.error(f'下载图片时出错: {e}')
