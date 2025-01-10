@@ -166,16 +166,22 @@ class UnityAssetCrawler(BaseCrawler):
             # 翻译描述文本
             translated_content = self.translate_text(content) if content else ""
             
-            return {
+            # 只有在成功下载了图片的情况下才包含save_dir
+            result_dict = {
                 'title': title,
                 'url': url,
                 'content': content,
                 'translated_content': translated_content,
                 'file_path': file_path,
                 'file_name': file_name,
-                'save_dir': os.path.abspath(save_dir),
                 'image_paths': images  # 只包含成功下载的图片路径
             }
+            
+            # 只有在有图片成功下载时才添加save_dir
+            if images:
+                result_dict['save_dir'] = os.path.abspath(save_dir)
+            
+            return result_dict
             
         except Exception as e:
             self.logger.error(f"解析页面时出错: {e}")
@@ -338,7 +344,7 @@ class UnityAssetCrawler(BaseCrawler):
             original_path = result.get('file_path', '')
             new_path = self.move_file_to_destination(original_path)
             
-            # 确保save_dir使用绝对路径
+            # 只有在result中存在save_dir时才使用它
             save_dir = result.get('save_dir', '')
             if save_dir and not os.path.isabs(save_dir):
                 save_dir = os.path.abspath(save_dir)
@@ -350,7 +356,7 @@ class UnityAssetCrawler(BaseCrawler):
                 '翻译后的描述': '',
                 '文件路径': new_path,  # 使用新的文件路径
                 '文件名': result.get('file_name', ''),
-                '图片文件夹': save_dir
+                '图片文件夹': save_dir if result.get('image_paths') else ''  # 只有在有图片时才设置图片文件夹
             }
             df_data.append(row)
 
