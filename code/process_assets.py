@@ -13,10 +13,11 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import threading
 import msvcrt
 import time
+import pandas as pd
+from openpyxl import load_workbook
 
 # 忽略 SSL 警告（如果需要禁用 SSL 验证）
 warnings.simplefilter("ignore", InsecureRequestWarning)
-
 
 # 自定义 TLS 适配器以强制使用 TLS 1.2
 class TLSAdapter(HTTPAdapter):
@@ -26,7 +27,6 @@ class TLSAdapter(HTTPAdapter):
         if self.tls_version:
             self.ssl_context.options |= self.tls_version
         super().__init__(**kwargs)
-
 
 def get_crawler_instance(crawler_type=None, max_workers=3, delay=1, disable_ssl_verification=False):
     """
@@ -46,141 +46,31 @@ def get_crawler_instance(crawler_type=None, max_workers=3, delay=1, disable_ssl_
     else:
         return UnityAssetCrawler(max_workers=max_workers, delay=delay)
 
-
-def process_single_asset(directory, file_info, disable_ssl_verification=False):
+def google_search_step(directory, file_indices=None):
     """
-    处理单个资源文件
+    执行Google搜索步骤，将结果保存到Excel
     :param directory: 资源文件所在目录
-    :param file_info: 文件信息字典
-    :param disable_ssl_verification: 是否禁用 SSL 验证（默认 False）
+    :param file_indices: 要处理的文件索引列表
+    :return: 搜索结果的字典，键为文件名，值为搜索结果列表
     """
-    print(f"处理文件: {file_info['original_name']}")
-    print(f"清理后的名称: {file_info['cleaned_name']}")
-
-    # 选择搜索网站
-    print("\n选择搜索网站：")
-    print("1. Unity Asset Store")
-    print("2. Unity Assets 4 Free")
-    site_choice = select_with_timeout("请选择搜索网站 (1/2): ").strip()
-    website = "site:assetstore.unity.com " if site_choice == '1' else "site:unityassets4free.com "
-    crawler_type = 'unityasset' if site_choice == '1' else 'assets4free'
-
-    # 1. 使用 Google 搜索获取标题和链接
-    while True:
-        search_query = f"{website}{file_info['cleaned_name']}"
-        search_query = search_query.replace("_", " ")
-        search_results = google_search(search_query)
-
-        if not search_results:
-            print(f"未找到相关搜索结果 {search_query}")
-            user_input = select_with_timeout("请输入新的搜索词（直接回车退出）", "")
-            if not user_input:
-                return False
-            file_info['cleaned_name'] = user_input
-            continue
-
-        # 显示搜索结果并让用户确认
-        print("\n搜索结果：")
-        for i, result in enumerate(search_results, 1):
-            print(f"{i}. 标题: {result['title']}")
-            print(f"   链接: {result['link']}\n")
-        
-        choice = select_with_timeout("请选择要使用的结果编号（输入数字），输入n重新搜索，直接回车退出：").strip()
-        if not choice:
-            return False
-        if choice.lower() == 'n':
-            user_input = select_with_timeout("请输入新的搜索词", file_info['cleaned_name'])
-            if user_input:
-                file_info['cleaned_name'] = user_input
-                continue
-            return False
-        
-        try:
-            selected_index = int(choice) - 1
-            if 0 <= selected_index < len(search_results):
-                selected_result = search_results[selected_index]
-                break
-            else:
-                print("无效的选择，请重试")
-                continue
-        except ValueError:
-            print("无效的输入，请重试")
-            continue
-
-    # 2. 获取爬虫实例并抓取页面
-    crawler = get_crawler_instance(crawler_type=crawler_type)
-    
-    try:
-        # 3. 下载并解析页面
-        response = crawler.session.get(selected_result['link'], verify=not disable_ssl_verification)
-        response.raise_for_status()
-        
-        # 4. 解析页面内容
-        parsed_content = crawler.parse_article(response.text, selected_result['link'], 
-                                            custom_title=selected_result['title'],
-                                            file_path=file_info['full_path'])
-        
-        if parsed_content:
-            print("成功获取页面内容")
-            return True
-        else:
-            print("无法解析页面内容")
-            return False
-            
-    except Exception as e:
-        print(f"处理过程中出错: {str(e)}")
-        return False
-
-
-def process_assets(directory, file_indices=None, disable_ssl_verification=False):
-    """
-    处理资源文件的主函数
-    :param directory: 资源文件所在目录
-    :param file_indices: 要处理的文件索引列表（按文件名排序后）
-    :param disable_ssl_verification: 是否禁用 SSL 验证（默认 False）
-    """
-    # 1. 获取并清理所有文件名
     all_files = clean_file_names(directory)
-    if not isinstance(all_files, list):
-        print("错误：clean_file_names 没有返回文件列表")
-        return
-        
-    if not all_files:
-        print("目录中没有找到文件")
-        return
-
-    print("\n所有文件:")
-    for i, file_info in enumerate(all_files):
-        print(f"{i}. {file_info['original_name']} -> {file_info['cleaned_name']}")
-
-    # 如果没有指定索引，默认处理第一个文件
+    if not isinstance(all_files, list) or not all_files:
+        print("错误：没有找到有效文件")
+        return None
+    
     if file_indices is None:
         file_indices = [0]
     
-    print(f"\n要处理的文件索引: {file_indices}")
-    
-    # 确保索引有效
     valid_indices = [i for i in file_indices if 0 <= i < len(all_files)]
     if not valid_indices:
         print("没有有效的文件索引")
-        return
+        return None
 
-    print(f"有效的文件索引: {valid_indices}")
-
-    # 创建爬虫实例（这里先创建一个，后面根据需要可能会创建新的）
-    crawler = None
-    last_crawler_type = None
-
-    # 处理每个指定的文件
-    results = []
-    skipped_files = []  # 用于记录跳过的文件
-    
+    results = {}
     for idx in valid_indices:
-        print(f"\n开始处理第 {idx + 1} 个文件:")
         file_info = all_files[idx]
-        print(f"文件信息: {file_info}")
+        print(f"\n处理文件: {file_info['cleaned_name']}")
         
-        # 选择搜索网站
         print("\n选择搜索网站：")
         print("1. Unity Asset Store")
         print("2. Unity Assets 4 Free")
@@ -188,109 +78,194 @@ def process_assets(directory, file_indices=None, disable_ssl_verification=False)
         website = "site:assetstore.unity.com " if site_choice == '1' else "site:unityassets4free.com "
         crawler_type = 'unityasset' if site_choice == '1' else 'assets4free'
         
-        # 如果爬虫类型改变，创建新的爬虫实例
+        search_query = website + file_info['cleaned_name']
+        search_results = google_search(search_query)
+        
+        if search_results:
+            results[file_info['cleaned_name']] = {
+                'search_results': search_results,
+                'crawler_type': crawler_type
+            }
+    
+    # 保存结果到Excel
+    if results:
+        excel_path = os.path.join(directory, 'search_results.xlsx')
+        save_to_excel(results, excel_path)
+        print(f"\n搜索结果已保存到 {excel_path}")
+    
+    return results
+
+def crawler_step(directory, file_indices=None, disable_ssl_verification=False, search_results=None):
+    """
+    执行爬虫步骤，获取描述并保存结果
+    :param directory: 资源文件所在目录
+    :param file_indices: 要处理的文件索引列表
+    :param disable_ssl_verification: 是否禁用SSL验证
+    :param search_results: Google搜索的结果字典，如果为None则尝试从Excel读取
+    """
+    all_files = clean_file_names(directory)
+    if not isinstance(all_files, list) or not all_files:
+        print("错误：没有找到有效文件")
+        return
+    
+    if file_indices is None:
+        file_indices = [0]
+    
+    valid_indices = [i for i in file_indices if 0 <= i < len(all_files)]
+    if not valid_indices:
+        print("没有有效的文件索引")
+        return
+
+    # 如果没有提供搜索结果，尝试从Excel读取
+    if search_results is None:
+        excel_path = os.path.join(directory, 'search_results.xlsx')
+        if os.path.exists(excel_path):
+            try:
+                search_results = read_from_excel(excel_path)
+            except Exception as e:
+                print(f"读取Excel文件失败: {str(e)}")
+                return
+        else:
+            print(f"找不到搜索结果文件: {excel_path}")
+            return
+
+    crawler = None
+    last_crawler_type = None
+    results = []
+    
+    for idx in valid_indices:
+        file_info = all_files[idx]
+        file_name = file_info['cleaned_name']
+        
+        if file_name not in search_results:
+            print(f"\n跳过文件 {file_name}: 没有找到对应的搜索结果")
+            continue
+            
+        print(f"\n处理文件: {file_name}")
+        
+        # 使用搜索结果中的爬虫类型
+        crawler_type = search_results[file_name]['crawler_type']
+        
         if crawler_type != last_crawler_type:
             crawler = get_crawler_instance(crawler_type=crawler_type)
             last_crawler_type = crawler_type
-
-        # 标记是否处理成功
-        processed = False
-        skip_reason = None
-
-        # 1. 使用 Google 搜索获取标题和链接
-        while True:
-            search_query = f"{website}{file_info['cleaned_name']}"
-            search_query = search_query.replace("_", " ")
-            search_results = google_search(search_query)
-
-            if not search_results:
-                print(f"未找到相关搜索结果 {search_query}")
-                user_input = select_with_timeout("请输入新的搜索词（直接回车退出）", "")
-                if not user_input:
-                    skip_reason = "未找到搜索结果"
-                    break
-                file_info['cleaned_name'] = user_input
-                continue
-
-            # 显示搜索结果并让用户确认
-            print("\n搜索结果：")
-            for i, result in enumerate(search_results, 1):
-                print(f"{i}. 标题: {result['title']}")
-                print(f"   链接: {result['link']}\n")
-            
-            choice = select_with_timeout("请选择要使用的结果编号（输入数字），输入n重新搜索，直接回车退出", "1")
-            if not choice:
-                skip_reason = "用户跳过选择"
-                break
-            if choice.lower() == 'n':
-                user_input = select_with_timeout("请输入新的搜索词", file_info['cleaned_name'])
-                if user_input:
-                    file_info['cleaned_name'] = user_input
-                    continue
-                skip_reason = "用户选择重新搜索后退出"
-                break
-            
+        
+        # 使用搜索结果中的URL
+        success = False
+        for result in search_results[file_name]['search_results']:
             try:
-                selected_index = int(choice) - 1
-                if 0 <= selected_index < len(search_results):
-                    selected_result = search_results[selected_index]
-                    
-                    try:
-                        # 下载并解析页面
-                        response = crawler.session.get(selected_result['link'], verify=not disable_ssl_verification)
-                        response.raise_for_status()
-                        
-                        # 解析页面内容
-                        parsed_content = crawler.parse_article(response.text, selected_result['link'], 
-                                                            custom_title=selected_result['title'],
-                                                            file_path=file_info['full_path'])
-                        
-                        if parsed_content:
-                            # 确保使用爬虫的原链接
-                            parsed_content['url'] = selected_result['link']
-                            print("成功获取页面内容")
-                            results.append(parsed_content)
-                            processed = True
-                        else:
-                            skip_reason = "无法解析页面内容"
-                    except Exception as e:
-                        skip_reason = f"处理出错: {str(e)}"
-                        print(f"处理过程中出错: {str(e)}")
-                    
+                # 获取页面内容
+                response = crawler.session.get(result['link'], verify=not disable_ssl_verification)
+                response.raise_for_status()
+                
+                # 解析页面内容
+                parsed_content = crawler.parse_article(
+                    response.text,
+                    result['link'],
+                    custom_title=result['title'],
+                    file_path=file_info['full_path']
+                )
+                
+                if parsed_content:
+                    print(f"成功处理URL: {result['link']}")
+                    results.append(parsed_content)
+                    success = True
                     break
-                else:
-                    print("无效的选择，请重试")
-                    continue
-            except ValueError:
-                print("无效的输入，请重试")
+                
+            except Exception as e:
+                print(f"处理URL时出错: {str(e)}")
                 continue
-
-        if not processed:
-            skipped_files.append({
-                'index': idx,
-                'name': file_info['original_name'],
-                'reason': skip_reason
-            })
-
-    # 打印处理结果摘要
-    print("\n处理结果摘要:")
-    print(f"\n成功处理的文件 ({len(results)}/{len(valid_indices)}):")
-    for i, result in enumerate(results):
-        print(f"文件 {i + 1}: {result.get('title', '未知标题')}")
-    
-    if skipped_files:
-        print(f"\n跳过的文件 ({len(skipped_files)}/{len(valid_indices)}):")
-        for skip_info in skipped_files:
-            print(f"文件 {skip_info['index']}: {skip_info['name']}")
-            print(f"  原因: {skip_info['reason']}")
+        
+        if not success:
+            print(f"无法成功处理文件 {file_name} 的任何URL")
     
     # 如果有结果且使用的是UnityAssetCrawler，保存到Excel
     if results and isinstance(crawler, UnityAssetCrawler):
         crawler.results = results
         crawler.save_to_excel()
 
+def save_to_excel(results, excel_path):
+    """
+    将搜索结果保存到Excel文件
+    :param results: 搜索结果字典
+    :param excel_path: Excel文件路径
+    """
+    # 准备数据
+    data = []
+    for file_name, info in results.items():
+        for result in info['search_results']:
+            data.append({
+                'file_name': file_name,
+                'title': result['title'],
+                'link': result['link'],
+                'crawler_type': info['crawler_type']
+            })
+    
+    # 创建DataFrame
+    df = pd.DataFrame(data)
+    
+    # 保存到Excel
+    df.to_excel(excel_path, index=False)
+    print(f"搜索结果已保存到: {excel_path}")
+
+def read_from_excel(excel_path):
+    """
+    从Excel文件读取搜索结果
+    :param excel_path: Excel文件路径
+    :return: 搜索结果字典
+    """
+    # 读取Excel文件
+    df = pd.read_excel(excel_path)
+    
+    # 转换为字典格式
+    results = {}
+    for _, row in df.iterrows():
+        file_name = row['file_name']
+        if file_name not in results:
+            results[file_name] = {
+                'search_results': [],
+                'crawler_type': row['crawler_type']
+            }
+        
+        results[file_name]['search_results'].append({
+            'title': row['title'],
+            'link': row['link']
+        })
+    
+    return results
+
+def process_assets(directory, file_indices=None, disable_ssl_verification=False):
+    """
+    处理资源文件的主函数，现在通过调用google_search_step和crawler_step来完成
+    :param directory: 资源文件所在目录
+    :param file_indices: 要处理的文件索引列表
+    :param disable_ssl_verification: 是否禁用SSL验证
+    """
+    # 步骤1：执行Google搜索
+    print("\n=== 步骤1：执行Google搜索 ===")
+    search_results = google_search_step(directory, file_indices)
+    if not search_results:
+        print("Google搜索步骤失败，终止处理")
+        return
+        
+    # 步骤2：执行爬虫
+    print("\n=== 步骤2：执行爬虫获取资源信息 ===")
+    crawler_step(directory, file_indices, disable_ssl_verification, search_results)
 
 if __name__ == "__main__":
-    # 示例用法
     target_directory = r"F:\0游戏教程\0tele"  # 替换为实际目录
-    process_assets(target_directory, file_indices=[0,1,2,3,4,5], disable_ssl_verification=True)  # 处理多个文件
+    
+    print("\n选择执行模式：")
+    print("1. 仅执行Google搜索并保存结果")
+    print("2. 仅执行爬虫获取描述（使用已保存的搜索结果）")
+    print("3. 执行完整流程（搜索+爬虫）")
+    
+    mode = select_with_timeout("请选择执行模式 (1/2/3): ", "3").strip()
+    file_indices = [1]  # 可以根据需要修改要处理的文件索引
+    
+    if mode == "1":
+        google_search_step(target_directory, file_indices)
+    elif mode == "2":
+        crawler_step(target_directory, file_indices, disable_ssl_verification=True)
+    else:
+        process_assets(target_directory, file_indices, disable_ssl_verification=True)
